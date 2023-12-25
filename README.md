@@ -1,1 +1,1 @@
-# sam-chat-boilderplate
+# sam-chat-boilerplate
