@@ -43,29 +43,29 @@ Resources:
         Name: SessionId
         Type: String
 
-  # chat
-  OnChatRoute:
+  # langchain/bedrock
+  LangChainBedrockRoute:
     Type: AWS::ApiGatewayV2::Route
     Properties:
       ApiId: !Ref WebSocketAPI
-      RouteKey: chat
+      RouteKey: langchain/bedrock
       AuthorizationType: NONE
       Target: !Join
         - "/"
         - - "integrations"
-          - !Ref OnChatIntegration
-  OnChatIntegration:
+          - !Ref LangChainBedrockIntegration
+  LangChainBedrockIntegration:
     Type: AWS::ApiGatewayV2::Integration
     Properties:
       ApiId: !Ref WebSocketAPI
       IntegrationType: AWS_PROXY
       IntegrationUri:
         # see https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html
-        Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${OnChatFunction.Arn}/invocations
-  OnChatFunction:
+        Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LangChainBedrockFunction.Arn}/invocations
+  LangChainBedrockFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: chat/
+      CodeUri: langchain/bedrock/
       Handler: app.handler
       Runtime: python3.12
       Timeout: 300
@@ -87,14 +87,14 @@ Resources:
                 - "bedrock:InvokeModelWithResponseStream"
               Resource:
                 - "arn:aws:bedrock:*::foundation-model/*"
-  OnChatPermission:
+  LangChainBedrockPermission:
     Type: AWS::Lambda::Permission
     DependsOn:
       - WebSocketAPI
       - SessionTable
     Properties:
       Action: lambda:InvokeFunction
-      FunctionName: !Ref OnChatFunction
+      FunctionName: !Ref LangChainBedrockFunction
       Principal: apigateway.amazonaws.com
 
   # $connect
