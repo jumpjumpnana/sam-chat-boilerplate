@@ -121,7 +121,7 @@ Resources:
     Properties:
       CodeUri: connect/
       Handler: app.handler
-      Runtime: python3.9
+      Runtime: python3.12
   OnConnectPermission:
     Type: AWS::Lambda::Permission
     DependsOn:
@@ -155,7 +155,7 @@ Resources:
     Properties:
       CodeUri: disconnect/
       Handler: app.handler
-      Runtime: python3.9
+      Runtime: python3.12
   OnDisconnectPermission:
     Type: AWS::Lambda::Permission
     DependsOn:
@@ -189,7 +189,7 @@ Resources:
     Properties:
       CodeUri: default/
       Handler: app.handler
-      Runtime: python3.9
+      Runtime: python3.12
   OnDefaultPermission:
     Type: AWS::Lambda::Permission
     DependsOn:
