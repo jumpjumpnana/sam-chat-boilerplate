@@ -5,6 +5,7 @@ import boto3
 from langchain.llms.bedrock import Bedrock
 from langchain.chains import ConversationChain
 from callback import APIGatewayWebSocketCallbackHandler
+from langchain.memory import ConversationBufferMemory
 from langchain.prompts import PromptTemplate
 
 
@@ -42,8 +43,15 @@ def handler(event, context):
         session_id=connection_id,
         boto3_session=session,
     )
+    memory = ConversationBufferMemory(
+        ai_prefix="Assistant",
+        chat_memory=history,
+    )
 
-    conversation = ConversationChain(llm=llm, memory=history)
+    conversation = ConversationChain(
+        llm=llm,
+        memory=memory,
+    )
     conversation.prompt = claude_prompt
 
     conversation.predict(input=body["input"])
