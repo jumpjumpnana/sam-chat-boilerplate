@@ -4,7 +4,7 @@ import os
 import boto3
 from langchain.llms.bedrock import Bedrock
 from langchain.chains import ConversationChain
-from .callback import APIGatewayWebSocketCallbackHandler
+from callback import APIGatewayWebSocketCallbackHandler
 from langchain.prompts import PromptTemplate
 
 
