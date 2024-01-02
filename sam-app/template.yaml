@@ -23,6 +23,7 @@ Resources:
   WebSocketAPIDeployment:
     Type: AWS::ApiGatewayV2::Deployment
     DependsOn:
+      - OnChatRoute
       - OnConnectRoute
       - OnDefaultRoute
       - OnDisconnectRoute
@@ -34,6 +35,67 @@ Resources:
       StageName: Production
       DeploymentId: !Ref WebSocketAPIDeployment
       ApiId: !Ref WebSocketAPI
+
+  SessionTable:
+    Type: AWS::Serverless::SimpleTable
+    Properties:
+      PrimaryKey:
+        Name: SessionId
+        Type: String
+
+  # chat
+  OnChatRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref WebSocketAPI
+      RouteKey: chat
+      AuthorizationType: NONE
+      Target: !Join
+        - "/"
+        - - "integrations"
+          - !Ref OnChatIntegration
+  OnChatIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref WebSocketAPI
+      IntegrationType: AWS_PROXY
+      IntegrationUri:
+        # see https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html
+        Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${OnChatFunction.Arn}/invocations
+  OnChatFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: chat/
+      Handler: app.handler
+      Runtime: python3.12
+      Timeout: 300
+      Environment:
+        Variables:
+          SessionTableName: !Ref SessionTable
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SessionTable
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+            - Effect: Allow
+              Action:
+                - "bedrock:InvokeModel"
+                - "bedrock:InvokeModelWithResponseStream"
+              Resource:
+                - "arn:aws:bedrock:*::foundation-model/*"
+  OnChatPermission:
+    Type: AWS::Lambda::Permission
+    DependsOn:
+      - WebSocketAPI
+      - SessionTable
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref OnChatFunction
+      Principal: apigateway.amazonaws.com
 
   # $connect
   OnConnectRoute:
@@ -59,7 +121,7 @@ Resources:
     Properties:
       CodeUri: connect/
       Handler: app.handler
-      Runtime: python3.9
+      Runtime: python3.12
   OnConnectPermission:
     Type: AWS::Lambda::Permission
     DependsOn:
@@ -93,7 +155,7 @@ Resources:
     Properties:
       CodeUri: disconnect/
       Handler: app.handler
-      Runtime: python3.9
+      Runtime: python3.12
   OnDisconnectPermission:
     Type: AWS::Lambda::Permission
     DependsOn:
@@ -127,7 +189,7 @@ Resources:
     Properties:
       CodeUri: default/
       Handler: app.handler
-      Runtime: python3.9
+      Runtime: python3.12
   OnDefaultPermission:
     Type: AWS::Lambda::Permission
     DependsOn:
