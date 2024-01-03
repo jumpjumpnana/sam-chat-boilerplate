@@ -20,6 +20,7 @@ Resources:
       Name: !Ref WebSocketAPIName
       ProtocolType: WEBSOCKET
       RouteSelectionExpression: "$request.body.action"
+  # TODO: auto re-deploy
   WebSocketAPIDeployment:
     Type: AWS::ApiGatewayV2::Deployment
     DependsOn:
@@ -208,6 +209,8 @@ Resources:
       ContentUri: layer/chat_common/
       CompatibleRuntimes:
         - python3.12
+    Metadata:
+      BuildMethod: python3.12
 
 Outputs:
   WebSocketAPIEndpoint:
