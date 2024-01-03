@@ -24,7 +24,7 @@ Resources:
   WebSocketAPIDeployment:
     Type: AWS::ApiGatewayV2::Deployment
     DependsOn:
-      - OnChatRoute
+      - LangChainBedrockRoute
       - OnConnectRoute
       - OnDefaultRoute
       - OnDisconnectRoute
