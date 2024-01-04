@@ -5,6 +5,11 @@ import boto3
 # environment variables
 model_id = os.environ.get("ModelId", "anthropic.claude-v2:1")
 session_table_name = os.environ["SessionTableName"]
+ai_prefix = os.environ.get(
+    "AI_Prefix",
+    # by default (Claude), this is "Assistant"
+    "Assistant",
+)
 prompt_template = os.environ.get(
     "PromptTemplate",
     # by default (Claude)
@@ -43,7 +48,8 @@ def handler(event, context):
     history.append({"type": "ai", "content": ""})
 
     # invoke bedrock
-    prompt = prompt_template.format(history=history, input=body["input"])
+    history_str = '\n'.join(map(lambda h: f'{ai_prefix}: {h['content']}' if h['type'] == 'ai' else f'Human: {h['content']}', history))
+    prompt = prompt_template.format(history=history_str, input=body["input"])
     print(f"prompt:\n{prompt}")
     res = bedrock.invoke_model_with_response_stream(
         modelId=model_id,
