@@ -101,6 +101,56 @@ Resources:
       FunctionName: !Ref LangChainBedrockFunction
       Principal: apigateway.amazonaws.com
 
+  # langchain/openai
+  LangChainOpenAIRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref WebSocketAPI
+      RouteKey: langchain/openai
+      AuthorizationType: NONE
+      Target: !Join
+        - "/"
+        - - "integrations"
+          - !Ref LangChainOpenAIIntegration
+  LangChainOpenAIIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref WebSocketAPI
+      IntegrationType: AWS_PROXY
+      IntegrationUri:
+        # see https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html
+        Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LangChainOpenAIFunction.Arn}/invocations
+  LangChainOpenAIFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: langchain/bedrock/
+      Handler: app.handler
+      Runtime: python3.12
+      Timeout: 300
+      Layers:
+        - !Ref LangChainCommonLayer
+      Environment:
+        Variables:
+          SessionTableName: !Ref SessionTable
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SessionTable
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+  LangChainOpenAIPermission:
+    Type: AWS::Lambda::Permission
+    DependsOn:
+      - WebSocketAPI
+      - SessionTable
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref LangChainOpenAIFunction
+      Principal: apigateway.amazonaws.com
+
   # bedrock
   BedrockRoute:
     Type: AWS::ApiGatewayV2::Route
