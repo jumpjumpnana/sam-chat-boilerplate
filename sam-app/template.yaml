@@ -206,7 +206,7 @@ Resources:
   ChatCommonLayer:
     Type: AWS::Serverless::LayerVersion
     Properties:
-      ContentUri: layer/chat_common/
+      ContentUri: layer/langchain_common/
       CompatibleRuntimes:
         - python3.12
     Metadata:
