@@ -5,10 +5,16 @@ import boto3
 # environment variables
 model_id = os.environ.get("ModelId", "anthropic.claude-v2:1")
 session_table_name = os.environ["SessionTableName"]
+prompt_template = os.environ.get(
+    "PromptTemplate",
+    # by default (Claude)
+    "\\n{history}\\n\\nHuman: {input}\\n\\nAssistant:\\n",
+).replace("\\n", "\n")
 
 # init clients outside of handler
 session = boto3.session.Session()
-ddb = session.client("dynamodb")
+ddb = session.resource("dynamodb")
+table = ddb.Table(session_table_name)
 bedrock = session.client("bedrock-runtime")
 
 
@@ -24,13 +30,26 @@ def handler(event, context):
         endpoint_url=f"https://{domain}/{stage}",
     )
 
-    # TODO: get chat history from ddb
+    # get chat history from ddb
+    history = []
+    try:
+        res = table.get_item(Key={"SessionId": connection_id})
+        history = res["Item"]["History"]
+    except:
+        pass
 
+    # append this conversation
+    history.append({"type": "human", "content": body["input"]})
+    history.append({"type": "ai", "content": ""})
+
+    # invoke bedrock
+    prompt = prompt_template.format(history=history, input=body["input"])
+    print(f"prompt:\n{prompt}")
     res = bedrock.invoke_model_with_response_stream(
         modelId=model_id,
         body=json.dumps(
             {
-                "prompt": f"\n\nHuman: { body['input'] }\n\nAssistant:",
+                "prompt": prompt,
                 "max_tokens_to_sample": 300,
                 "temperature": 0.5,
                 "top_k": 250,
@@ -44,12 +63,15 @@ def handler(event, context):
     # stream response to client
     for data in res["body"]:
         # print(data)
+        completion = json.loads(data["chunk"]["bytes"])["completion"]
+        history[-1]["content"] += completion
         apigw.post_to_connection(
             ConnectionId=connection_id,
-            Data=json.loads(data["chunk"]["bytes"])["completion"],
+            Data=completion,
         )
 
-    # TODO: write history to ddb
+    # write history to ddb
+    table.put_item(Item={"SessionId": connection_id, "History": history})
 
     return {
         "statusCode": 200,
