@@ -25,6 +25,8 @@ Resources:
     Type: AWS::ApiGatewayV2::Deployment
     DependsOn:
       - LangChainBedrockRoute
+      - LangChainSageMakerRoute
+      - LangChainOpenAIRoute
       - BedrockRoute
       - OnConnectRoute
       - OnDefaultRoute
