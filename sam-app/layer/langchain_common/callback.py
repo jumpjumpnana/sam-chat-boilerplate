@@ -1,6 +1,7 @@
 from __future__ import annotations
 from langchain_core.callbacks.base import BaseCallbackHandler
 from typing import TYPE_CHECKING, Any, Dict, List
+from boto3 import Session
 
 if TYPE_CHECKING:
     from langchain_core.agents import AgentAction, AgentFinish
@@ -8,15 +9,22 @@ if TYPE_CHECKING:
     from langchain_core.outputs import LLMResult
 
 
+# modified from StreamingStdOutCallbackHandler
 class APIGatewayWebSocketCallbackHandler(BaseCallbackHandler):
     """Callback handler for streaming. Only works with LLMs that support streaming."""
 
-    # modified from StreamingStdOutCallbackHandler
-
-    def __init__(self, apigw, connection_id):
-        """Initialize callback handler."""
-        self.apigw = apigw
-        self.connection_id = connection_id
+    def __init__(self, boto3_session: Session, event):
+        """
+        Initialize callback handler
+        with boto3 session and api gateway websocket event.
+        """
+        domain = event["requestContext"]["domainName"]
+        stage = event["requestContext"]["stage"]
+        self.connection_id = event["requestContext"]["connectionId"]
+        self.apigw = boto3_session.client(
+            "apigatewaymanagementapi",
+            endpoint_url=f"https://{domain}/{stage}",
+        )
 
     def on_llm_start(
         self, serialized: Dict[str, Any], prompts: List[str], **kwargs: Any
