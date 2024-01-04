@@ -138,6 +138,12 @@ Resources:
                 - "execute-api:ManageConnections"
               Resource:
                 - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+            - Effect: Allow
+              Action:
+                - "bedrock:InvokeModel"
+                - "bedrock:InvokeModelWithResponseStream"
+              Resource:
+                - "arn:aws:bedrock:*::foundation-model/*"
   BedrockPermission:
     Type: AWS::Lambda::Permission
     DependsOn:
