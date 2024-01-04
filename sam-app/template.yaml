@@ -100,6 +100,54 @@ Resources:
       FunctionName: !Ref LangChainBedrockFunction
       Principal: apigateway.amazonaws.com
 
+  # bedrock
+  BedrockRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref WebSocketAPI
+      RouteKey: bedrock
+      AuthorizationType: NONE
+      Target: !Join
+        - "/"
+        - - "integrations"
+          - !Ref BedrockIntegration
+  BedrockIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref WebSocketAPI
+      IntegrationType: AWS_PROXY
+      IntegrationUri:
+        # see https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html
+        Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${BedrockFunction.Arn}/invocations
+  BedrockFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: bedrock/
+      Handler: app.handler
+      Runtime: python3.12
+      Timeout: 300
+      Environment:
+        Variables:
+          SessionTableName: !Ref SessionTable
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SessionTable
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+  BedrockPermission:
+    Type: AWS::Lambda::Permission
+    DependsOn:
+      - WebSocketAPI
+      - SessionTable
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref BedrockFunction
+      Principal: apigateway.amazonaws.com
+
   # $connect
   OnConnectRoute:
     Type: AWS::ApiGatewayV2::Route
