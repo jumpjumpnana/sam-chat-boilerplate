@@ -2,6 +2,7 @@ import os
 import boto3
 from langchain.llms.bedrock import Bedrock
 from langchain.prompts import PromptTemplate
+from chat import chat
 
 # environment variables
 model_id = os.environ.get("ModelId", "anthropic.claude-v2:1")
@@ -21,3 +22,8 @@ prompt_template = os.environ.get(
 llm = Bedrock(model_id=model_id, streaming=True)
 prompt = PromptTemplate.from_template(prompt_template)
 boto3_session = boto3.session.Session()
+
+
+def handler(event, context):
+    chat(event, llm, boto3_session, session_table_name, ai_prefix, prompt)
+    return {"statusCode": 200}

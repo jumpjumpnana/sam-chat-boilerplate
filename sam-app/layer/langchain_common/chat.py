@@ -1,18 +1,27 @@
 import json
+from boto3 import Session
 from langchain.memory.chat_message_histories import DynamoDBChatMessageHistory
-from langchain.chains import ConversationChain
-from callback import APIGatewayWebSocketCallbackHandler
 from langchain.memory import ConversationBufferMemory
-from prepare import llm, boto3_session, session_table_name, ai_prefix, prompt
+from langchain.chains import ConversationChain
+from langchain.prompts import PromptTemplate
+from langchain.llms.base import LLM
+from callback import APIGatewayWebSocketCallbackHandler
 
 
-def handler(event, context):
-    print(json.dumps(event))
+def chat(
+    event: dict,
+    llm: LLM,
+    boto3_session: Session,
+    session_table_name: str,
+    ai_prefix: str,
+    prompt: PromptTemplate,
+):
+    # print(json.dumps(event))
     connection_id = event["requestContext"]["connectionId"]
     body = json.loads(event["body"])
 
     # set callback handler
-    # so that every time the model generates a response,
+    # so that every time the model generates a chunk of response,
     # it is sent to the client
     llm.callbacks = [APIGatewayWebSocketCallbackHandler(boto3_session, event)]
 
@@ -26,7 +35,3 @@ def handler(event, context):
     conversation.prompt = prompt
 
     conversation.predict(input=body["input"])
-
-    return {
-        "statusCode": 200,
-    }

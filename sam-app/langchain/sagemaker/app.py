@@ -4,6 +4,7 @@ import boto3
 from langchain.llms.sagemaker_endpoint import SagemakerEndpoint, LLMContentHandler
 from langchain.chains.conversation.prompt import PROMPT
 from typing import Dict
+from chat import chat
 
 session_table_name = os.environ["SessionTableName"]
 endpoint_name = os.environ["EndpointName"]
@@ -32,4 +33,9 @@ llm = SagemakerEndpoint(
     streaming=True,
 )
 ai_prefix = "AI"  # use default
-prompt = PROMPT
+prompt = PROMPT  # use default
+
+
+def handler(event, context):
+    chat(event, llm, boto3_session, session_table_name, ai_prefix, prompt)
+    return {"statusCode": 200}
