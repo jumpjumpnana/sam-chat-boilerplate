@@ -17,13 +17,21 @@ def chat(
     prompt: PromptTemplate,
 ):
     # print(json.dumps(event))
+    domain = event["requestContext"]["domainName"]
+    stage = event["requestContext"]["stage"]
     connection_id = event["requestContext"]["connectionId"]
     body = json.loads(event["body"])
 
     # set callback handler
     # so that every time the model generates a chunk of response,
     # it is sent to the client
-    llm.callbacks = [APIGatewayWebSocketCallbackHandler(boto3_session, event)]
+    llm.callbacks = [
+        APIGatewayWebSocketCallbackHandler(
+            boto3_session,
+            f"https://{domain}/{stage}",
+            connection_id,
+        )
+    ]
 
     history = DynamoDBChatMessageHistory(
         table_name=session_table_name,

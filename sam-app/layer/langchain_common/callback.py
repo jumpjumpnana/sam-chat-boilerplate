@@ -13,17 +13,15 @@ if TYPE_CHECKING:
 class APIGatewayWebSocketCallbackHandler(BaseCallbackHandler):
     """Callback handler for streaming. Only works with LLMs that support streaming."""
 
-    def __init__(self, boto3_session: Session, event):
+    def __init__(self, boto3_session: Session, endpoint_url: str, connection_id: str):
         """
         Initialize callback handler
         with boto3 session and api gateway websocket event.
         """
-        domain = event["requestContext"]["domainName"]
-        stage = event["requestContext"]["stage"]
-        self.connection_id = event["requestContext"]["connectionId"]
+        self.connection_id = connection_id
         self.apigw = boto3_session.client(
             "apigatewaymanagementapi",
-            endpoint_url=f"https://{domain}/{stage}",
+            endpoint_url=endpoint_url,
         )
 
     def on_llm_start(
