@@ -18,7 +18,7 @@ prompt_template = os.environ.get(
     "\\n{history}\\n\\nHuman: {input}\\n\\nAssistant:\\n",
 ).replace("\\n", "\n")
 
-# init clients outside of handler
+# init dependencies outside of handler
 llm = Bedrock(model_id=model_id, streaming=True)
 prompt = PromptTemplate.from_template(prompt_template)
 boto3_session = boto3.session.Session()

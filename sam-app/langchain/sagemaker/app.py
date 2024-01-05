@@ -6,6 +6,7 @@ from langchain.chains.conversation.prompt import PROMPT
 from typing import Dict
 from chat import chat
 
+# environment variables
 session_table_name = os.environ["SessionTableName"]
 endpoint_name = os.environ["EndpointName"]
 
@@ -23,6 +24,7 @@ class ContentHandler(LLMContentHandler):
         return response_json[0]["generated_text"]
 
 
+# init dependencies outside of handler
 boto3_session = boto3.session.Session()
 sagemaker = boto3_session.client("sagemaker-runtime")
 llm = SagemakerEndpoint(

@@ -17,6 +17,8 @@ def chat(
     prompt: PromptTemplate,
 ):
     # print(json.dumps(event))
+
+    # parse event
     domain = event["requestContext"]["domainName"]
     stage = event["requestContext"]["stage"]
     connection_id = event["requestContext"]["connectionId"]
@@ -27,7 +29,7 @@ def chat(
     # it is sent to the client
     callback = APIGatewayWebSocketCallbackHandler(
         boto3_session,
-        f"https://{domain}/{stage}",
+        f"https://{domain}/{stage}",  # see https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-how-to-call-websocket-api-connections.html
         connection_id,
         on_token=lambda t: json.dumps({"kind": "token", "chunk": t}),
         on_end=lambda: json.dumps({"kind": "end"}),
@@ -37,7 +39,7 @@ def chat(
 
     history = DynamoDBChatMessageHistory(
         table_name=session_table_name,
-        session_id=connection_id,
+        session_id=connection_id,  # use connection_id as session_id for simplicity
         boto3_session=boto3_session,
     )
     memory = ConversationBufferMemory(ai_prefix=ai_prefix, chat_memory=history)
