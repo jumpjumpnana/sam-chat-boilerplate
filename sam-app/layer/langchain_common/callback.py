@@ -4,7 +4,6 @@ from boto3 import Session
 from langchain_core.callbacks.base import BaseCallbackHandler
 
 if TYPE_CHECKING:
-    from langchain_core.agents import AgentAction, AgentFinish
     from langchain_core.messages import BaseMessage
     from langchain_core.outputs import LLMResult
 
@@ -17,7 +16,10 @@ class APIGatewayWebSocketCallbackHandler(BaseCallbackHandler):
         boto3_session: Session,
         endpoint_url: str,
         connection_id: str,
-        formatter: Callable[[str], str] = lambda x: x,
+        *,
+        on_token: Callable[[str], str] | None = None,
+        on_end: Callable[[], str] | None = None,
+        on_err: Callable[[BaseException], str] | None = None,
     ):
         """
         Initialize callback handler
@@ -28,15 +30,36 @@ class APIGatewayWebSocketCallbackHandler(BaseCallbackHandler):
             "apigatewaymanagementapi",
             endpoint_url=endpoint_url,
         )
-        self.formatter = formatter
+        self.on_token = on_token
+        self.on_end = on_end
+        self.on_err = on_err
         super().__init__()
 
     def on_llm_new_token(self, token: str, **kwargs: Any) -> None:
         """Run on new LLM token. Only available when streaming is enabled."""
-        self.apigw.post_to_connection(
-            ConnectionId=self.connection_id,
-            Data=self.formatter(token),
-        )
+        if self.on_token is not None:
+            self.apigw.post_to_connection(
+                ConnectionId=self.connection_id,
+                Data=self.on_token(token),
+            )
+
+    def on_llm_end(self, response: LLMResult, **kwargs: Any) -> Any:
+        if self.on_end is not None:
+            self.apigw.post_to_connection(
+                ConnectionId=self.connection_id,
+                Data=self.on_end(),
+            )
+
+    def on_llm_error(
+        self,
+        error: BaseException,
+        **kwargs: Any,
+    ) -> Any:
+        if self.on_err is not None:
+            self.apigw.post_to_connection(
+                ConnectionId=self.connection_id,
+                Data=self.on_err(error),
+            )
 
     def on_chat_model_start(
         self,

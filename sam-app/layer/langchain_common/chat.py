@@ -29,6 +29,9 @@ def chat(
         boto3_session,
         f"https://{domain}/{stage}",
         connection_id,
+        on_token=lambda t: json.dumps({"kind": "token", "chunk": t}),
+        on_end=lambda: json.dumps({"kind": "end"}),
+        on_err=lambda e: json.dumps({"kind": "error"}),
     )
     llm.callbacks = [callback]
 
