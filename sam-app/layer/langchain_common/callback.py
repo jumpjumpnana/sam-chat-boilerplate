@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, Any, Dict, List
+from typing import TYPE_CHECKING, Any, Dict, List, Callable
 from boto3 import Session
 from langchain.callbacks.streaming_aiter import AsyncIteratorCallbackHandler
 
@@ -12,7 +12,13 @@ if TYPE_CHECKING:
 class APIGatewayWebSocketCallbackHandler(AsyncIteratorCallbackHandler):
     """Callback handler for streaming. Only works with LLMs that support streaming."""
 
-    def __init__(self, boto3_session: Session, endpoint_url: str, connection_id: str):
+    def __init__(
+        self,
+        boto3_session: Session,
+        endpoint_url: str,
+        connection_id: str,
+        formatter: Callable[[str], str] = lambda x: x,
+    ):
         """
         Initialize callback handler
         with boto3 session and api gateway websocket event.
@@ -22,13 +28,14 @@ class APIGatewayWebSocketCallbackHandler(AsyncIteratorCallbackHandler):
             "apigatewaymanagementapi",
             endpoint_url=endpoint_url,
         )
+        self.formatter = formatter
         super().__init__()
 
     async def on_llm_new_token(self, token: str, **kwargs: Any) -> None:
         """Run on new LLM token. Only available when streaming is enabled."""
         self.apigw.post_to_connection(
             ConnectionId=self.connection_id,
-            Data=token,
+            Data=self.formatter(token),
         )
 
     async def on_chat_model_start(
