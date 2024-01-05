@@ -24,7 +24,7 @@ bedrock = session.client("bedrock-runtime")
 
 
 def handler(event, context):
-    print(json.dumps(event))
+    # print(json.dumps(event))
     domain = event["requestContext"]["domainName"]
     stage = event["requestContext"]["stage"]
     connection_id = event["requestContext"]["connectionId"]
@@ -68,13 +68,17 @@ def handler(event, context):
 
     # stream response to client
     for data in res["body"]:
-        # print(data)
+        # print(json.dumps(data))
         completion = json.loads(data["chunk"]["bytes"])["completion"]
         history[-1]["content"] += completion
         apigw.post_to_connection(
             ConnectionId=connection_id,
-            Data=completion,
+            Data=json.dumps({'kind': 'token', 'chunk':completion}),
         )
+    apigw.post_to_connection(
+        ConnectionId=connection_id,
+        Data=json.dumps({'kind': 'end'}),
+    )
 
     # write history to ddb
     table.put_item(Item={"SessionId": connection_id, "History": history})
