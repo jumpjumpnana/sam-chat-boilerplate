@@ -45,6 +45,3 @@ def chat(
     conversation.prompt = prompt
 
     conversation.predict(input=body["input"])
-
-    # wait for callback to finish
-    callback.done.wait()
