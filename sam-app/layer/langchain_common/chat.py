@@ -25,13 +25,12 @@ def chat(
     # set callback handler
     # so that every time the model generates a chunk of response,
     # it is sent to the client
-    llm.callbacks = [
-        APIGatewayWebSocketCallbackHandler(
-            boto3_session,
-            f"https://{domain}/{stage}",
-            connection_id,
-        )
-    ]
+    callback = APIGatewayWebSocketCallbackHandler(
+        boto3_session,
+        f"https://{domain}/{stage}",
+        connection_id,
+    )
+    llm.callbacks = [callback]
 
     history = DynamoDBChatMessageHistory(
         table_name=session_table_name,
@@ -43,3 +42,6 @@ def chat(
     conversation.prompt = prompt
 
     conversation.predict(input=body["input"])
+
+    # wait for callback to finish
+    callback.done.wait()
