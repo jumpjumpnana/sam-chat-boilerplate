@@ -72,7 +72,7 @@ Resources:
       CodeUri: langchain/bedrock/
       Handler: app.handler
       Runtime: python3.12
-      Timeout: 300
+      Timeout: 30
       Layers:
         - !Ref LangChainCommonLayer
       Environment:
@@ -128,7 +128,7 @@ Resources:
       CodeUri: langchain/bedrock/
       Handler: app.handler
       Runtime: python3.12
-      Timeout: 300
+      Timeout: 30
       Layers:
         - !Ref LangChainCommonLayer
       Environment:
@@ -178,7 +178,7 @@ Resources:
       CodeUri: langchain/bedrock/
       Handler: app.handler
       Runtime: python3.12
-      Timeout: 300
+      Timeout: 30
       Layers:
         - !Ref LangChainCommonLayer
       Environment:
@@ -228,7 +228,7 @@ Resources:
       CodeUri: bedrock/
       Handler: app.handler
       Runtime: python3.12
-      Timeout: 300
+      Timeout: 30
       Environment:
         Variables:
           SessionTableName: !Ref SessionTable

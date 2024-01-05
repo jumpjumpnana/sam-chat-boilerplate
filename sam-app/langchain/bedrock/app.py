@@ -2,6 +2,7 @@ import os
 import boto3
 from langchain.llms.bedrock import Bedrock
 from langchain.prompts import PromptTemplate
+from chat import chat
 
 # environment variables
 model_id = os.environ.get("ModelId", "anthropic.claude-v2:1")
@@ -17,7 +18,13 @@ prompt_template = os.environ.get(
     "\\n{history}\\n\\nHuman: {input}\\n\\nAssistant:\\n",
 ).replace("\\n", "\n")
 
-# init clients outside of handler
+# init dependencies outside of handler
 llm = Bedrock(model_id=model_id, streaming=True)
 prompt = PromptTemplate.from_template(prompt_template)
 boto3_session = boto3.session.Session()
+
+
+def handler(event, context):
+    # call the common chat function in the layer/langchain_common/chat.py
+    chat(event, llm, boto3_session, session_table_name, ai_prefix, prompt)
+    return {"statusCode": 200}
