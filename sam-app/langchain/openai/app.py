@@ -14,5 +14,6 @@ prompt = PROMPT  # use default
 
 
 def handler(event, context):
+    # call the common chat function in the layer/langchain_common/chat.py
     chat(event, llm, boto3_session, session_table_name, ai_prefix, prompt)
     return {"statusCode": 200}
