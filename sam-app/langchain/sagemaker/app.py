@@ -30,7 +30,7 @@ sagemaker = boto3_session.client("sagemaker-runtime")
 llm = SagemakerEndpoint(
     endpoint_name=endpoint_name,
     client=sagemaker,
-    model_kwargs={"temperature": 1e-10},
+    model_kwargs={"temperature": 0.5},
     content_handler=ContentHandler(),
     streaming=True,
 )
