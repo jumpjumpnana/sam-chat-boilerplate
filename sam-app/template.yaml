@@ -125,7 +125,7 @@ Resources:
   LangChainOpenAIFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: langchain/bedrock/
+      CodeUri: langchain/openai/
       Handler: app.handler
       Runtime: python3.12
       Timeout: 30

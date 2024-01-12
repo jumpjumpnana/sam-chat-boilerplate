@@ -1,6 +1,6 @@
 import json
 from boto3 import Session
-from langchain.memory.chat_message_histories import DynamoDBChatMessageHistory
+from langchain.memory import DynamoDBChatMessageHistory
 from langchain.memory import ConversationBufferMemory
 from langchain.chains import ConversationChain
 from langchain.prompts import PromptTemplate
