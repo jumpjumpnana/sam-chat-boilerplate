@@ -72,7 +72,7 @@ Resources:
         # see https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-integration-async.html
         integration.request.header.X-Amz-Invocation-Type: "'Event'"
       RequestTemplates:
-        # see https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-mapping-template-reference.html
+        # see https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-websocket-api-mapping-template-reference.html
         application/json: !ToJsonString
           requestContext:
             domainName: $context.domainName
