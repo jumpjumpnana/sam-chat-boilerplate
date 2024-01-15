@@ -5,7 +5,7 @@ from langchain.memory import ConversationBufferMemory
 from langchain.chains import ConversationChain
 from langchain.prompts import PromptTemplate
 from langchain.llms.base import LLM
-from callback import APIGatewayWebSocketCallbackHandler
+from callback import StreamingAPIGatewayWebSocketCallbackHandler
 
 
 def chat(
@@ -27,9 +27,10 @@ def chat(
     # set callback handler
     # so that every time the model generates a chunk of response,
     # it is sent to the client
-    callback = APIGatewayWebSocketCallbackHandler(
+    callback = StreamingAPIGatewayWebSocketCallbackHandler(
         boto3_session,
-        f"https://{domain}/{stage}",  # see https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-how-to-call-websocket-api-connections.html
+        # see https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-how-to-call-websocket-api-connections.html
+        f"https://{domain}/{stage}",
         connection_id,
         on_token=lambda t: json.dumps({"kind": "token", "chunk": t}),
         on_end=lambda: json.dumps({"kind": "end"}),
