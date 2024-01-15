@@ -40,7 +40,9 @@ def chat(
 
     history = DynamoDBChatMessageHistory(
         table_name=session_table_name,
-        session_id=connection_id,  # use connection_id as session_id for simplicity
+        # use connection_id as session_id for simplicity.
+        # in production, you should design the session_id yourself
+        session_id=connection_id,
         boto3_session=boto3_session,
     )
     memory = ConversationBufferMemory(ai_prefix=ai_prefix, chat_memory=history)
