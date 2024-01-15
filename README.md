@@ -20,7 +20,7 @@ Take this project as the starting point of your serverless LLM chat application 
 
 After the deployment, you will get a WebSocket API endpoint. Connect to that endpoint, and send the following JSON message to start the conversation:
 
-```json
+```jsonc
 // call Amazon Bedrock without langchain
 { "action": "bedrock", "input": "..." }
 
