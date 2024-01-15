@@ -1,5 +1,7 @@
 AWSTemplateFormatVersion: "2010-09-09"
-Transform: AWS::Serverless-2016-10-31
+Transform:
+  - AWS::Serverless-2016-10-31
+  - AWS::LanguageExtensions # for Fn::ToJsonString, see https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/intrinsic-function-reference-ToJsonString.html
 Description: >
   sam-chat-boilerplate
 
@@ -11,6 +13,16 @@ Parameters:
     Type: String
     Default: SamChatWebSocketAPI
     Description: (Required) The name of the API Gateway WebSocket API.
+
+# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
+Globals:
+  Function:
+    Handler: app.handler
+    Runtime: python3.12
+    # the timeout of the API Gateway WebSocket proxy integration is 29s
+    # but we use Lambda async invocation for llm related functions
+    # so it's safe to set this greater than 29
+    Timeout: 300
 
 Resources:
   # websocket api
@@ -62,17 +74,27 @@ Resources:
     Type: AWS::ApiGatewayV2::Integration
     Properties:
       ApiId: !Ref WebSocketAPI
-      IntegrationType: AWS_PROXY
+      IntegrationType: AWS # use non-proxy integration to invoke lambda async
       IntegrationUri:
         # see https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html
         Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LangChainBedrockFunction.Arn}/invocations
+      RequestParameters:
+        # see https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-integration-async.html
+        &AsyncLambdaIntegrationRequestParameters
+        integration.request.header.X-Amz-Invocation-Type: "'Event'"
+      RequestTemplates:
+        # see https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-websocket-api-mapping-template-reference.html
+        &AsyncLambdaIntegrationRequestTemplates
+        application/json: !ToJsonString
+          requestContext:
+            domainName: $context.domainName
+            stage: $context.stage
+            connectionId: $context.connectionId
+          body: $input.body.replaceAll('"', '\\"')
   LangChainBedrockFunction:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: langchain/bedrock/
-      Handler: app.handler
-      Runtime: python3.12
-      Timeout: 30
       Layers:
         - !Ref LangChainCommonLayer
       Environment:
@@ -118,17 +140,16 @@ Resources:
     Type: AWS::ApiGatewayV2::Integration
     Properties:
       ApiId: !Ref WebSocketAPI
-      IntegrationType: AWS_PROXY
+      IntegrationType: AWS
       IntegrationUri:
         # see https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html
         Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LangChainOpenAIFunction.Arn}/invocations
+      RequestParameters: *AsyncLambdaIntegrationRequestParameters
+      RequestTemplates: *AsyncLambdaIntegrationRequestTemplates
   LangChainOpenAIFunction:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: langchain/openai/
-      Handler: app.handler
-      Runtime: python3.12
-      Timeout: 30
       Layers:
         - !Ref LangChainCommonLayer
       Environment:
@@ -168,17 +189,16 @@ Resources:
     Type: AWS::ApiGatewayV2::Integration
     Properties:
       ApiId: !Ref WebSocketAPI
-      IntegrationType: AWS_PROXY
+      IntegrationType: AWS
       IntegrationUri:
         # see https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html
         Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LangChainSageMakerFunction.Arn}/invocations
+      RequestParameters: *AsyncLambdaIntegrationRequestParameters
+      RequestTemplates: *AsyncLambdaIntegrationRequestTemplates
   LangChainSageMakerFunction:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: langchain/bedrock/
-      Handler: app.handler
-      Runtime: python3.12
-      Timeout: 30
       Layers:
         - !Ref LangChainCommonLayer
       Environment:
@@ -218,17 +238,16 @@ Resources:
     Type: AWS::ApiGatewayV2::Integration
     Properties:
       ApiId: !Ref WebSocketAPI
-      IntegrationType: AWS_PROXY
+      IntegrationType: AWS
       IntegrationUri:
         # see https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html
         Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${BedrockFunction.Arn}/invocations
+      RequestParameters: *AsyncLambdaIntegrationRequestParameters
+      RequestTemplates: *AsyncLambdaIntegrationRequestTemplates
   BedrockFunction:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: bedrock/
-      Handler: app.handler
-      Runtime: python3.12
-      Timeout: 30
       Environment:
         Variables:
           SessionTableName: !Ref SessionTable
@@ -280,8 +299,6 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: connect/
-      Handler: app.handler
-      Runtime: python3.12
   OnConnectPermission:
     Type: AWS::Lambda::Permission
     DependsOn:
@@ -314,8 +331,6 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: disconnect/
-      Handler: app.handler
-      Runtime: python3.12
   OnDisconnectPermission:
     Type: AWS::Lambda::Permission
     DependsOn:
@@ -354,8 +369,6 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: default/
-      Handler: app.handler
-      Runtime: python3.12
   OnDefaultPermission:
     Type: AWS::Lambda::Permission
     DependsOn:
