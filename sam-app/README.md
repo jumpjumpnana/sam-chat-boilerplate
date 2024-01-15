@@ -30,7 +30,10 @@ Once the SageMaker endpoint is ready, you can set the `EndpointName` environment
 
 Make sure you have an OpenAI API key, or an OpenAI compatible HTTP endpoint.
 
-Once you are ready, modify the [langchain/openai](./langchain/openai/app.py) Lambda function to apply it.
+Once you are ready, configure the `OpenAI_API_Key` or `OpenAI_API_Base` environment variable for the Lambda function to use it.
+
+> [!NOTE]
+> Storing credentials in environment variables is not recommended. You can use [AWS Secrets Manager](https://aws.amazon.com/secrets-manager/) to store your credentials securely, and use [AWS Parameters and Secrets Lambda Extension](https://docs.aws.amazon.com/secretsmanager/latest/userguide/retrieving-secrets_lambda.html) to retrieve them in your Lambda function.
 
 ### Deploy
 

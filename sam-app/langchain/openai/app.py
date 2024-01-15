@@ -6,10 +6,19 @@ from chat import chat
 
 # environment variables
 session_table_name = os.environ["SessionTableName"]
-open_ai_api_base = os.environ["OpenAI_API_Base"]
+open_ai_api_base = os.environ.get("OpenAI_API_Base")  # default is official API
+openai_api_key = os.environ.get(
+    "OpenAI_API_Key",
+    # for a self-host endpoint, the api_key is needed but can be anything
+    "test",
+)
 
 # init dependencies outside of handler
-llm = OpenAI(openai_api_base=open_ai_api_base, openai_api_key="test", streaming=True)
+llm = OpenAI(
+    openai_api_base=open_ai_api_base,
+    openai_api_key=openai_api_key,
+    streaming=True,
+)
 boto3_session = boto3.session.Session()
 ai_prefix = "AI"  # use default
 prompt = PROMPT  # use default

@@ -48,7 +48,14 @@ def handler(event, context):
     history.append({"type": "ai", "content": ""})
 
     # invoke bedrock
-    history_str = '\n'.join(map(lambda h: f'{ai_prefix}: {h['content']}' if h['type'] == 'ai' else f'Human: {h['content']}', history))
+    history_str = "\n".join(
+        map(
+            lambda h: f"{ai_prefix}: {h['content']}"
+            if h["type"] == "ai"
+            else f"Human: {h['content']}",
+            history,
+        )
+    )
     prompt = prompt_template.format(history=history_str, input=body["input"])
     print(f"prompt:\n{prompt}")
     res = bedrock.invoke_model_with_response_stream(
@@ -73,11 +80,11 @@ def handler(event, context):
         history[-1]["content"] += completion
         apigw.post_to_connection(
             ConnectionId=connection_id,
-            Data=json.dumps({'kind': 'token', 'chunk':completion}),
+            Data=json.dumps({"kind": "token", "chunk": completion}),
         )
     apigw.post_to_connection(
         ConnectionId=connection_id,
-        Data=json.dumps({'kind': 'end'}),
+        Data=json.dumps({"kind": "end"}),
     )
 
     # write history to ddb

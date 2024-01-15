@@ -8,7 +8,7 @@ if TYPE_CHECKING:
     from langchain_core.outputs import LLMResult
 
 
-class APIGatewayWebSocketCallbackHandler(BaseCallbackHandler):
+class StreamingAPIGatewayWebSocketCallbackHandler(BaseCallbackHandler):
     """Callback handler for streaming. Only works with LLMs that support streaming."""
 
     def __init__(
