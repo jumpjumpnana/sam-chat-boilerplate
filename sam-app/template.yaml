@@ -90,7 +90,7 @@ Resources:
             domainName: $context.domainName
             stage: $context.stage
             connectionId: $context.connectionId
-          body: $input.body.replaceAll('"', '\\"')
+          body: $input.body.replaceAll('"', '\"')
   LangChainBedrockFunction:
     Type: AWS::Serverless::Function
     Properties:
