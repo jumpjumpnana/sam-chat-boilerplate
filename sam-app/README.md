@@ -44,3 +44,13 @@ sam build
 # Deploy the whole application
 sam deploy --guided
 ```
+
+## Cleanup
+
+```bash
+# if you use the default stack name (sam-chat)
+sam delete
+
+# if you use a custom stack name
+sam delete --stack-name <stack-name>
+```
