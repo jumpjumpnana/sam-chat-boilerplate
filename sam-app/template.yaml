@@ -359,12 +359,12 @@ Resources:
       IntegrationUri:
         # see https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html
         Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${OnDefaultFunction.Arn}/invocations
-  OnDefaultIntegrationResponse:
-    Type: AWS::ApiGatewayV2::IntegrationResponse
+  OnDefaultRouteResponse:
+    Type: AWS::ApiGatewayV2::RouteResponse
     Properties:
       ApiId: !Ref WebSocketAPI
-      IntegrationId: !Ref OnDefaultIntegration
-      IntegrationResponseKey: $default
+      RouteId: !Ref OnDefaultRoute
+      RouteResponseKey: $default
   OnDefaultFunction:
     Type: AWS::Serverless::Function
     Properties:
