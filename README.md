@@ -1,5 +1,7 @@
 # sam-chat-boilerplate
 
+[![GitHub Release](https://img.shields.io/github/v/release/DiscreteTom/sam-chat-boilerplate?style=flat-square)](https://github.com/DiscreteTom/sam-chat-boilerplate/releases/latest)
+
 Take this project as the starting point of your serverless LLM chat application on AWS.
 
 > [!NOTE]
