@@ -18,6 +18,10 @@ lint = true
 capabilities = "CAPABILITY_IAM"
 confirm_changeset = true
 resolve_s3 = true
+s3_prefix = "sam-chat"
+region = "us-west-2"
+parameter_overrides = "WebSocketAPIName=\"SamChatWebSocketAPI\""
+image_repositories = []
 
 [default.package.parameters]
 resolve_s3 = true
@@ -30,3 +34,13 @@ warm_containers = "EAGER"
 
 [default.local_start_lambda.parameters]
 warm_containers = "EAGER"
+
+[dev.deploy.parameters]
+stack_name = "sam-chat"
+resolve_s3 = true
+s3_prefix = "sam-chat"
+region = "us-west-2"
+confirm_changeset = true
+capabilities = "CAPABILITY_IAM"
+parameter_overrides = "WebSocketAPIName=\"SamChatWebSocketAPI\""
+image_repositories = []

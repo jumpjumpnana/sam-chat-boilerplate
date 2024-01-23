@@ -37,7 +37,6 @@ Resources:
     Type: AWS::ApiGatewayV2::Deployment
     DependsOn:
       - LangChainBedrockRoute
-      - LangChainSageMakerRoute
       - LangChainOpenAIRoute
       - BedrockRoute
       - OnConnectRoute
@@ -154,6 +153,8 @@ Resources:
         - !Ref LangChainCommonLayer
       Environment:
         Variables:
+          OpenAI_API_Base: http://neural-chat-q5-114160182.us-west-2.elb.amazonaws.com/v1
+          OpenAI_API_Key: "123"
           SessionTableName: !Ref SessionTable
       Policies:
         - DynamoDBCrudPolicy:
@@ -174,54 +175,7 @@ Resources:
       FunctionName: !Ref LangChainOpenAIFunction
       Principal: apigateway.amazonaws.com
 
-  # langchain/sagemaker
-  LangChainSageMakerRoute:
-    Type: AWS::ApiGatewayV2::Route
-    Properties:
-      ApiId: !Ref WebSocketAPI
-      RouteKey: langchain/sagemaker
-      AuthorizationType: NONE
-      Target: !Join
-        - "/"
-        - - "integrations"
-          - !Ref LangChainSageMakerIntegration
-  LangChainSageMakerIntegration:
-    Type: AWS::ApiGatewayV2::Integration
-    Properties:
-      ApiId: !Ref WebSocketAPI
-      IntegrationType: AWS
-      IntegrationUri:
-        # see https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html
-        Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LangChainSageMakerFunction.Arn}/invocations
-      RequestParameters: *AsyncLambdaIntegrationRequestParameters
-      RequestTemplates: *AsyncLambdaIntegrationRequestTemplates
-  LangChainSageMakerFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: langchain/bedrock/
-      Layers:
-        - !Ref LangChainCommonLayer
-      Environment:
-        Variables:
-          SessionTableName: !Ref SessionTable
-      Policies:
-        - DynamoDBCrudPolicy:
-            TableName: !Ref SessionTable
-        - Statement:
-            - Effect: Allow
-              Action:
-                - "execute-api:ManageConnections"
-              Resource:
-                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
-  LangChainSageMakerPermission:
-    Type: AWS::Lambda::Permission
-    DependsOn:
-      - WebSocketAPI
-      - SessionTable
-    Properties:
-      Action: lambda:InvokeFunction
-      FunctionName: !Ref LangChainSageMakerFunction
-      Principal: apigateway.amazonaws.com
+ 
 
   # bedrock
   BedrockRoute:
