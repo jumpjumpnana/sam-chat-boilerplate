@@ -36,6 +36,7 @@ Resources:
   WebSocketAPIDeployment:
     Type: AWS::ApiGatewayV2::Deployment
     DependsOn:
+      - LangChainMistralRoute
       - LangChainBedrockRoute
       - LangChainOpenAIRoute
       - BedrockRoute
@@ -173,6 +174,60 @@ Resources:
     Properties:
       Action: lambda:InvokeFunction
       FunctionName: !Ref LangChainOpenAIFunction
+      Principal: apigateway.amazonaws.com
+
+
+
+  # langchain/mistral
+  LangChainMistralRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref WebSocketAPI
+      RouteKey: langchain/mistral
+      AuthorizationType: NONE
+      Target: !Join
+        - "/"
+        - - "integrations"
+          - !Ref LangChainMistralIntegration
+  LangChainMistralIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref WebSocketAPI
+      IntegrationType: AWS
+      IntegrationUri:
+        # see https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html
+        Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LangChainMistralFunction.Arn}/invocations
+      RequestParameters: *AsyncLambdaIntegrationRequestParameters
+      RequestTemplates: *AsyncLambdaIntegrationRequestTemplates
+  LangChainMistralFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: langchain/mistral/
+      Layers:
+        - !Ref LangChainCommonLayer
+      Environment:
+        Variables:
+          Mistral_API_Base: "https://api.mistral.ai/v1/chat/completions"
+          Mistral_API_Key: "pv1Rl69upV9DiOVAlBVfhwUCmCJXfVe0"
+          Mistral_Model_Name: "mistral-medium"
+          SessionTableName: !Ref SessionTable
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SessionTable
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+  LangChainMistralPermission:
+    Type: AWS::Lambda::Permission
+    DependsOn:
+      - WebSocketAPI
+      - SessionTable
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref LangChainMistralFunction
       Principal: apigateway.amazonaws.com
 
  
