@@ -36,7 +36,15 @@ Resources:
   WebSocketAPIDeployment:
     Type: AWS::ApiGatewayV2::Deployment
     DependsOn:
-      - LangChainMistralRoute
+      - LangChainDeepinfraPygmalion13b4bit128gRoute
+      - LangChainDeepinfraDolphin26mixtral8x7bRoute
+      - LangChainDeepinfraAiroboros70bRoute
+      - LangChainDeepinfraLzlv70bfp16hfRoute
+      - LangChainDeepinfraAiroborosl270bgpt4141Route
+      - LangChainDeepinfraMixtral8x7BInstructv01Route
+      - LangChainDeepinfraMistral7BInstructv01Route
+      - LangChainDeepinfraGrypheMythonMaxL213bRoute
+      - LangChainMistralMediumRoute
       - LangChainBedrockRoute
       - LangChainOpenAIRoute
       - BedrockRoute
@@ -178,31 +186,31 @@ Resources:
 
 
 
-  # langchain/mistral
-  LangChainMistralRoute:
+  # langchain/mistral/medium
+  LangChainMistralMediumRoute:
     Type: AWS::ApiGatewayV2::Route
     Properties:
       ApiId: !Ref WebSocketAPI
-      RouteKey: langchain/mistral
+      RouteKey: langchain/mistral/medium
       AuthorizationType: NONE
       Target: !Join
         - "/"
         - - "integrations"
-          - !Ref LangChainMistralIntegration
-  LangChainMistralIntegration:
+          - !Ref LangChainMistralMediumIntegration
+  LangChainMistralMediumIntegration:
     Type: AWS::ApiGatewayV2::Integration
     Properties:
       ApiId: !Ref WebSocketAPI
       IntegrationType: AWS
       IntegrationUri:
         # see https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html
-        Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LangChainMistralFunction.Arn}/invocations
+        Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LangChainMistralMediumFunction.Arn}/invocations
       RequestParameters: *AsyncLambdaIntegrationRequestParameters
       RequestTemplates: *AsyncLambdaIntegrationRequestTemplates
-  LangChainMistralFunction:
+  LangChainMistralMediumFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: langchain/mistral/
+      CodeUri: langchain/mistral/medium/
       Layers:
         - !Ref LangChainCommonLayer
       Environment:
@@ -220,16 +228,443 @@ Resources:
                 - "execute-api:ManageConnections"
               Resource:
                 - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
-  LangChainMistralPermission:
+  LangChainMistralMediumPermission:
     Type: AWS::Lambda::Permission
     DependsOn:
       - WebSocketAPI
       - SessionTable
     Properties:
       Action: lambda:InvokeFunction
-      FunctionName: !Ref LangChainMistralFunction
+      FunctionName: !Ref LangChainMistralMediumFunction
       Principal: apigateway.amazonaws.com
 
+
+
+
+      # langchain/deepinfra/Gryphe-MythoMax-L2-13b
+  LangChainDeepinfraGrypheMythonMaxL213bRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref WebSocketAPI
+      RouteKey: langchain/deepinfra/MythoMax-L2-13b
+      AuthorizationType: NONE
+      Target: !Join
+        - "/"
+        - - "integrations"
+          - !Ref LangChainDeepinfraGrypheMythonMaxL213bIntegration
+  LangChainDeepinfraGrypheMythonMaxL213bIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref WebSocketAPI
+      IntegrationType: AWS
+      IntegrationUri:
+        # see https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html
+        Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LangChainDeepinfraGrypheMythonMaxL213bFunction.Arn}/invocations
+      RequestParameters: *AsyncLambdaIntegrationRequestParameters
+      RequestTemplates: *AsyncLambdaIntegrationRequestTemplates
+  LangChainDeepinfraGrypheMythonMaxL213bFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: langchain/deepinfra/gryphe-mythomax-l2-13b/
+      Layers:
+        - !Ref LangChainCommonLayer
+      Environment:
+        Variables:
+          API_Base: "https://api.deepinfra.com/v1/openai"
+          API_Key: "1iubpJyGRvVCwIcbwaamAro95AqWR9mE"
+          Model_Name: "Gryphe/MythoMax-L2-13b"
+          SessionTableName: !Ref SessionTable
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SessionTable
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+  LangChainDeepinfraGrypheMythonMaxL213bPermission:
+    Type: AWS::Lambda::Permission
+    DependsOn:
+      - WebSocketAPI
+      - SessionTable
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref LangChainDeepinfraGrypheMythonMaxL213bFunction
+      Principal: apigateway.amazonaws.com
+
+
+ # langchain/deepinfra/Mistral-7B-Instruct-v0.1
+  LangChainDeepinfraMistral7BInstructv01Route:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref WebSocketAPI
+      RouteKey: langchain/deepinfra/Mistral-7B-Instruct-v0.1
+      AuthorizationType: NONE
+      Target: !Join
+        - "/"
+        - - "integrations"
+          - !Ref LangChainDeepinfraMistral7BInstructv01Integration
+  LangChainDeepinfraMistral7BInstructv01Integration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref WebSocketAPI
+      IntegrationType: AWS
+      IntegrationUri:
+        # see https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html
+        Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LangChainDeepinfraMistral7BInstructv01Function.Arn}/invocations
+      RequestParameters: *AsyncLambdaIntegrationRequestParameters
+      RequestTemplates: *AsyncLambdaIntegrationRequestTemplates
+  LangChainDeepinfraMistral7BInstructv01Function:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: langchain/deepinfra/mistralai-Mistral-7B-Instruct-v0.1/
+      Layers:
+        - !Ref LangChainCommonLayer
+      Environment:
+        Variables:
+          API_Base: "https://api.deepinfra.com/v1/openai"
+          API_Key: "1iubpJyGRvVCwIcbwaamAro95AqWR9mE"
+          Model_Name: "mistralai/Mistral-7B-Instruct-v0.1"
+          SessionTableName: !Ref SessionTable
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SessionTable
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+  LangChainDeepinfraMistral7BInstructv01Permission:
+    Type: AWS::Lambda::Permission
+    DependsOn:
+      - WebSocketAPI
+      - SessionTable
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref LangChainDeepinfraMistral7BInstructv01Function
+      Principal: apigateway.amazonaws.com
+
+
+
+      # langchain/deepinfra/Mixtral-8x7B-Instruct-v0.1
+  LangChainDeepinfraMixtral8x7BInstructv01Route:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref WebSocketAPI
+      RouteKey: langchain/deepinfra/Mixtral-8x7B-Instruct-v0.1
+      AuthorizationType: NONE
+      Target: !Join
+        - "/"
+        - - "integrations"
+          - !Ref LangChainDeepinfraMixtral8x7BInstructv01Integration
+  LangChainDeepinfraMixtral8x7BInstructv01Integration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref WebSocketAPI
+      IntegrationType: AWS
+      IntegrationUri:
+        # see https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html
+        Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LangChainDeepinfraMixtral8x7BInstructv01Function.Arn}/invocations
+      RequestParameters: *AsyncLambdaIntegrationRequestParameters
+      RequestTemplates: *AsyncLambdaIntegrationRequestTemplates
+  LangChainDeepinfraMixtral8x7BInstructv01Function:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: langchain/deepinfra/mistralai-Mixtral-8x7B-Instruct-v0.1/
+      Layers:
+        - !Ref LangChainCommonLayer
+      Environment:
+        Variables:
+          API_Base: "https://api.deepinfra.com/v1/openai"
+          API_Key: "1iubpJyGRvVCwIcbwaamAro95AqWR9mE"
+          Model_Name: "mistralai/Mixtral-8x7B-Instruct-v0.1"
+          SessionTableName: !Ref SessionTable
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SessionTable
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+  LangChainDeepinfraMixtral8x7BInstructv01Permission:
+    Type: AWS::Lambda::Permission
+    DependsOn:
+      - WebSocketAPI
+      - SessionTable
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref LangChainDeepinfraMixtral8x7BInstructv01Function
+      Principal: apigateway.amazonaws.com
+
+
+       # langchain/deepinfra/airoboros-l2-70b-gpt4-1.4.1
+  LangChainDeepinfraAiroborosl270bgpt4141Route:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref WebSocketAPI
+      RouteKey: langchain/deepinfra/airoboros-l2-70b-gpt4-1.4.1
+      AuthorizationType: NONE
+      Target: !Join
+        - "/"
+        - - "integrations"
+          - !Ref LangChainDeepinfraAiroborosl270bgpt4141Integration
+  LangChainDeepinfraAiroborosl270bgpt4141Integration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref WebSocketAPI
+      IntegrationType: AWS
+      IntegrationUri:
+        # see https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html
+        Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LangChainDeepinfraAiroborosl270bgpt4141Function.Arn}/invocations
+      RequestParameters: *AsyncLambdaIntegrationRequestParameters
+      RequestTemplates: *AsyncLambdaIntegrationRequestTemplates
+  LangChainDeepinfraAiroborosl270bgpt4141Function:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: langchain/deepinfra/jondurbin-airoboros-l2-70b-gpt4-1.4.1/
+      Layers:
+        - !Ref LangChainCommonLayer
+      Environment:
+        Variables:
+          API_Base: "https://api.deepinfra.com/v1/openai"
+          API_Key: "1iubpJyGRvVCwIcbwaamAro95AqWR9mE"
+          Model_Name: "jondurbin/airoboros-l2-70b-gpt4-1.4.1"
+          SessionTableName: !Ref SessionTable
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SessionTable
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+  LangChainDeepinfraAiroborosl270bgpt4141Permission:
+    Type: AWS::Lambda::Permission
+    DependsOn:
+      - WebSocketAPI
+      - SessionTable
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref LangChainDeepinfraAiroborosl270bgpt4141Function
+      Principal: apigateway.amazonaws.com
+
+
+
+      # langchain/deepinfra/lzlv_70b_fp16_hf
+  LangChainDeepinfraLzlv70bfp16hfRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref WebSocketAPI
+      RouteKey: langchain/deepinfra/lzlv_70b_fp16_hf
+      AuthorizationType: NONE
+      Target: !Join
+        - "/"
+        - - "integrations"
+          - !Ref LangChainDeepinfraLzlv70bfp16hfIntegration
+  LangChainDeepinfraLzlv70bfp16hfIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref WebSocketAPI
+      IntegrationType: AWS
+      IntegrationUri:
+        # see https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html
+        Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LangChainDeepinfraLzlv70bfp16hfFunction.Arn}/invocations
+      RequestParameters: *AsyncLambdaIntegrationRequestParameters
+      RequestTemplates: *AsyncLambdaIntegrationRequestTemplates
+  LangChainDeepinfraLzlv70bfp16hfFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: langchain/deepinfra/lizpreciatior-lzlv_70b_fp16_hf/
+      Layers:
+        - !Ref LangChainCommonLayer
+      Environment:
+        Variables:
+          API_Base: "https://api.deepinfra.com/v1/openai"
+          API_Key: "1iubpJyGRvVCwIcbwaamAro95AqWR9mE"
+          Model_Name: "lizpreciatior/lzlv_70b_fp16_hf"
+          SessionTableName: !Ref SessionTable
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SessionTable
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+  LangChainDeepinfraLzlv70bfp16hfPermission:
+    Type: AWS::Lambda::Permission
+    DependsOn:
+      - WebSocketAPI
+      - SessionTable
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref LangChainDeepinfraLzlv70bfp16hfFunction
+      Principal: apigateway.amazonaws.com
+
+
+
+# langchain/deepinfra/airoboros-70b
+  LangChainDeepinfraAiroboros70bRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref WebSocketAPI
+      RouteKey: langchain/deepinfra/airoboros-70b
+      AuthorizationType: NONE
+      Target: !Join
+        - "/"
+        - - "integrations"
+          - !Ref LangChainDeepinfraAiroboros70bIntegration
+  LangChainDeepinfraAiroboros70bIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref WebSocketAPI
+      IntegrationType: AWS
+      IntegrationUri:
+        # see https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html
+        Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LangChainDeepinfraAiroboros70bFunction.Arn}/invocations
+      RequestParameters: *AsyncLambdaIntegrationRequestParameters
+      RequestTemplates: *AsyncLambdaIntegrationRequestTemplates
+  LangChainDeepinfraAiroboros70bFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: langchain/deepinfra/deepinfra-airoboros-70b/
+      Layers:
+        - !Ref LangChainCommonLayer
+      Environment:
+        Variables:
+          API_Base: "https://api.deepinfra.com/v1/openai"
+          API_Key: "1iubpJyGRvVCwIcbwaamAro95AqWR9mE"
+          Model_Name: "deepinfra/airoboros-70b"
+          SessionTableName: !Ref SessionTable
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SessionTable
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+  LangChainDeepinfraAiroboros70bPermission:
+    Type: AWS::Lambda::Permission
+    DependsOn:
+      - WebSocketAPI
+      - SessionTable
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref LangChainDeepinfraAiroboros70bFunction
+      Principal: apigateway.amazonaws.com
+
+
+# langchain/deepinfra/dolphin-2.6-mixtral-8x7b
+  LangChainDeepinfraDolphin26mixtral8x7bRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref WebSocketAPI
+      RouteKey: langchain/deepinfra/dolphin-2.6-mixtral-8x7b
+      AuthorizationType: NONE
+      Target: !Join
+        - "/"
+        - - "integrations"
+          - !Ref LangChainDeepinfraDolphin26mixtral8x7bIntegration
+  LangChainDeepinfraDolphin26mixtral8x7bIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref WebSocketAPI
+      IntegrationType: AWS
+      IntegrationUri:
+        # see https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html
+        Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LangChainDeepinfraDolphin26mixtral8x7bFunction.Arn}/invocations
+      RequestParameters: *AsyncLambdaIntegrationRequestParameters
+      RequestTemplates: *AsyncLambdaIntegrationRequestTemplates
+  LangChainDeepinfraDolphin26mixtral8x7bFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: langchain/deepinfra/cognitivecomputations-dolphin-2.6-mixtral-8x7b/
+      Layers:
+        - !Ref LangChainCommonLayer
+      Environment:
+        Variables:
+          API_Base: "https://api.deepinfra.com/v1/openai"
+          API_Key: "1iubpJyGRvVCwIcbwaamAro95AqWR9mE"
+          Model_Name: "cognitivecomputations/dolphin-2.6-mixtral-8x7b"
+          SessionTableName: !Ref SessionTable
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SessionTable
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+  LangChainDeepinfraDolphin26mixtral8x7bPermission:
+    Type: AWS::Lambda::Permission
+    DependsOn:
+      - WebSocketAPI
+      - SessionTable
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref LangChainDeepinfraDolphin26mixtral8x7bFunction
+      Principal: apigateway.amazonaws.com
+
+      # langchain/deepinfra/pygmalion-13b-4bit-128g
+  LangChainDeepinfraPygmalion13b4bit128gRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref WebSocketAPI
+      RouteKey: langchain/deepinfra/pygmalion-13b-4bit-128g
+      AuthorizationType: NONE
+      Target: !Join
+        - "/"
+        - - "integrations"
+          - !Ref LangChainDeepinfraPygmalion13b4bit128gIntegration
+  LangChainDeepinfraPygmalion13b4bit128gIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref WebSocketAPI
+      IntegrationType: AWS
+      IntegrationUri:
+        # see https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html
+        Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LangChainDeepinfraPygmalion13b4bit128gFunction.Arn}/invocations
+      RequestParameters: *AsyncLambdaIntegrationRequestParameters
+      RequestTemplates: *AsyncLambdaIntegrationRequestTemplates
+  LangChainDeepinfraPygmalion13b4bit128gFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: langchain/deepinfra/DeepInfra-pygmalion-13b-4bit-128g/
+      Layers:
+        - !Ref LangChainCommonLayer
+      Environment:
+        Variables:
+          API_Base: "https://api.deepinfra.com/v1/openai"
+          API_Key: "1iubpJyGRvVCwIcbwaamAro95AqWR9mE"
+          Model_Name: "DeepInfra/pygmalion-13b-4bit-128g"
+          SessionTableName: !Ref SessionTable
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SessionTable
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+  LangChainDeepinfraPygmalion13b4bit128gPermission:
+    Type: AWS::Lambda::Permission
+    DependsOn:
+      - WebSocketAPI
+      - SessionTable
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref LangChainDeepinfraPygmalion13b4bit128gFunction
+      Principal: apigateway.amazonaws.com
  
 
   # bedrock

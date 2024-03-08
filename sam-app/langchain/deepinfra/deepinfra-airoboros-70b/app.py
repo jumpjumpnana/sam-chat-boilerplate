@@ -4,19 +4,24 @@ from langchain.llms.openai import OpenAI
 from langchain.chains.conversation.prompt import PROMPT
 from chat import chat
 
+# from mistralai.client import MistralClient
+# from mistralai.models.chat_completion import ChatMessage
+
 # environment variables
 session_table_name = os.environ["SessionTableName"]
-open_ai_api_base = os.environ.get("OpenAI_API_Base")  # default is official API
-openai_api_key = os.environ.get(
-    "OpenAI_API_Key",
+api_base = os.environ.get("API_Base")  # default is official API
+api_key = os.environ.get(
+    "API_Key",
     # for a self-host endpoint, the api_key is needed but can be anything
     "test",
 )
+model_name = os.environ.get("Model_Name")
 
 # init dependencies outside of handler
 llm = OpenAI(
-    openai_api_base=open_ai_api_base,
-    openai_api_key=openai_api_key,
+    openai_api_base=api_base,
+    openai_api_key=api_key,
+    model_name = model_name,
     streaming=True,
 )
 boto3_session = boto3.session.Session()
