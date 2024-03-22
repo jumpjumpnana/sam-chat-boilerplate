@@ -3,9 +3,19 @@ from boto3 import Session
 from langchain.memory import DynamoDBChatMessageHistory
 from langchain.memory import ConversationBufferMemory
 from langchain.chains import ConversationChain
-from langchain.prompts import PromptTemplate
+from langchain_core.messages import (
+    SystemMessage
+) 
+from langchain.prompts import (
+    ChatPromptTemplate, 
+    MessagesPlaceholder, 
+    SystemMessagePromptTemplate, 
+    HumanMessagePromptTemplate,
+    PromptTemplate
+)
 from langchain.llms.base import LLM
 from callback import StreamingAPIGatewayWebSocketCallbackHandler
+
 
 
 def chat(
@@ -14,7 +24,7 @@ def chat(
     boto3_session: Session,
     session_table_name: str,
     ai_prefix: str,
-    prompt: PromptTemplate,
+    promptTemplate: PromptTemplate,
 ):
     # print(json.dumps(event))
 
@@ -22,7 +32,11 @@ def chat(
     domain = event["requestContext"]["domainName"]
     stage = event["requestContext"]["stage"]
     connection_id = event["requestContext"]["connectionId"]
-    body = json.loads(event["body"])
+    body = json.loads(event["body"],strict=False)
+    # body = json.loads(event["body"])
+
+    db_connect_id = body["connection_id"]
+    print("db_connect_id:"+db_connect_id)
 
     # set callback handler
     # so that every time the model generates a chunk of response,
@@ -38,15 +52,65 @@ def chat(
     )
     llm.callbacks = [callback]
 
-    history = DynamoDBChatMessageHistory(
+    prompt_template = ChatPromptTemplate.from_messages([
+        # SystemMessagePromptTemplate.from_template(body["input"]["system"]),
+        ("system", body["input"]["system"]),
+        ("user", body["input"]["human"]),
+        # MessagesPlaceholder(variable_name="history"),
+        # HumanMessagePromptTemplate.from_template(body["input"]["human"])
+    ])
+    # system_input = body["input"]["system"]
+    input = body["input"]["human"]
+
+   
+    # print("prompt_template:"+prompt_template)
+
+    chat_memory = DynamoDBChatMessageHistory(
         table_name=session_table_name,
         # use connection_id as session_id for simplicity.
         # in production, you should design the session_id yourself
-        session_id=connection_id,
+        session_id=db_connect_id,
         boto3_session=boto3_session,
     )
-    memory = ConversationBufferMemory(ai_prefix=ai_prefix, chat_memory=history)
-    conversation = ConversationChain(llm=llm, memory=memory)
-    conversation.prompt = prompt
+    # output_parser = StrOutputParser()
 
-    conversation.predict(input=body["input"])
+    memory = ConversationBufferMemory(ai_prefix=ai_prefix, chat_memory=chat_memory)
+    conversation = ConversationChain(llm=llm, memory=memory)
+    conversation.prompt = prompt_template
+    conversation.predict(input=input)
+
+
+
+
+
+     # prompt_template = PromptTemplate(input_variables=["history", "system"], template=body["input"]["system"])
+
+    # prompt_template = SystemMessagePromptTemplate.from_template(body["input"]["system"])
+    # prompt_template = PromptTemplate.from_template(body["input"]["human"]).partial(system=body["input"]["system"])
+
+
+    # system_message = SystemMessage(content=body["input"]["system"])
+    # prompt_template = ChatPromptTemplate(messages=[system_message])
+     # conversation = ConversationChain(
+    #     llm=llm, 
+    #     verbose=True,
+    #     memory=memory
+    # )
+       
+    # conversation.predict(input="what is your name")
+    # conversation.from_template = SystemMessagePromptTemplate.from_template(body["input"]["system"])
+
+
+    #stream=True,
+    #temperature=0.7,
+    # max_tokens =200,
+
+
+   
+
+
+
+
+
+
+
