@@ -1,8 +1,11 @@
+
+import os
+
 import json
 from boto3 import Session
 from langchain.memory import DynamoDBChatMessageHistory
 from langchain.memory import ConversationBufferMemory
-from langchain.chains import ConversationChain
+from langchain.chains import ConversationChain,LLMChain
 from langchain_core.messages import (
     SystemMessage
 ) 
@@ -14,7 +17,14 @@ from langchain.prompts import (
     PromptTemplate
 )
 from langchain.llms.base import LLM
-from callback import StreamingAPIGatewayWebSocketCallbackHandler
+# from callback import StreamingAPIGatewayWebSocketCallbackHandler
+from deepinfracallback import StreamingAPIGatewayWebSocketCallbackHandler
+
+
+from langchain.llms import DeepInfra
+from langchain_community.chat_models import ChatDeepInfra
+from langchain_core.messages import HumanMessage, SystemMessage
+
 
 
 
@@ -24,7 +34,7 @@ def chat(
     boto3_session: Session,
     session_table_name: str,
     ai_prefix: str,
-    promptTemplate: PromptTemplate,
+    prompt: PromptTemplate,
 ):
     # print(json.dumps(event))
 
@@ -52,32 +62,34 @@ def chat(
     )
     llm.callbacks = [callback]
 
+    # chat_memory = DynamoDBChatMessageHistory(
+    #     table_name=session_table_name,
+    #     # use connection_id as session_id for simplicity.
+    #     # in production, you should design the session_id yourself
+    #     session_id=db_connect_id,
+    #     boto3_session=boto3_session,
+    # )
+    # print("History"+chat_memory)
+
     prompt_template = ChatPromptTemplate.from_messages([
-        # SystemMessagePromptTemplate.from_template(body["input"]["system"]),
-        ("system", body["input"]["system"]),
-        ("user", body["input"]["human"]),
-        # MessagesPlaceholder(variable_name="history"),
-        # HumanMessagePromptTemplate.from_template(body["input"]["human"])
+        SystemMessagePromptTemplate.from_template(body["input"]["system"]),
+        HumanMessagePromptTemplate.from_template(body["input"]["human"]),
+        # ("system", "Character: Mika. In this situation, respond as Mika would and follow Mika's persona. Persona: Mika is a middle school teacher in Beijing China. She like to say OMG on every sentence."),
+        # ("user", "what's your name"),
+        # # MessagesPlaceholder(variable_name="history"),
+        # # HumanMessagePromptTemplate.from_template(body["input"]["human"])
     ])
-    # system_input = body["input"]["system"]
-    input = body["input"]["human"]
+
+    # memory = ConversationBufferMemory(ai_prefix=ai_prefix)
+    conversation = ConversationChain(llm=llm)
+    conversation.prompt = prompt_template
+
+    a = conversation.predict(input=body["input"]["human"])
+    print("a:"+a)
+
+
 
    
-    # print("prompt_template:"+prompt_template)
-
-    chat_memory = DynamoDBChatMessageHistory(
-        table_name=session_table_name,
-        # use connection_id as session_id for simplicity.
-        # in production, you should design the session_id yourself
-        session_id=db_connect_id,
-        boto3_session=boto3_session,
-    )
-    # output_parser = StrOutputParser()
-
-    memory = ConversationBufferMemory(ai_prefix=ai_prefix, chat_memory=chat_memory)
-    conversation = ConversationChain(llm=llm, memory=memory)
-    conversation.prompt = prompt_template
-    conversation.predict(input=input)
 
 
 
@@ -104,6 +116,51 @@ def chat(
     #stream=True,
     #temperature=0.7,
     # max_tokens =200,
+
+
+
+      # prompttest =  PromptTemplate.from_template("{ \"messages\": [ { \"role\": \"system\", \"content\": \"Character: Mika. In this situation, respond as Mika would and follow Mika's persona. Persona: Mika is a middle school teacher in Beijing China. She like to say OMG on every sentence.\" }, { \"role\": \"user\", \"content\": \"what is your name\" } ] }")
+    # prompttest = ChatPromptTemplate.from_messages([
+        # {
+        #   "role": "system",
+        #   "content": "Character: Mika. In this situation, respond as Mika would and follow Mika's persona. Persona: Mika is a middle school teacher in Beijing China. She like to say OMG on every sentence."
+        # }
+        # {
+        #   "role": "user",
+        #   "content": "what is your name"
+        # }
+    # ])
+
+
+
+# { "messages": [
+#     {
+#       "role": "system",
+#       "content": "Character: Mika. In this situation, respond as Mika would and follow Mika's persona. Persona: Mika is a middle school teacher in Beijing China. She like to say OMG on every sentence."
+#     }
+#     {
+#       "role": "user",
+#       "content": "what is your name"
+#     }
+#   ]
+# } 
+
+
+
+# prompttest = [
+#         f"{role}: {content}"
+#         for role, content in (
+#             ("system", body["input"]["system"]),
+#             ("user", body["input"]["human"])
+#         )
+#     ]
+#     print("system:"+body["input"]["system"])
+#     print("human:"+body["input"]["human"])
+
+#     example_prompt = PromptTemplate(
+#         input_variables=[""],
+#         template=prompttest,
+#     )
 
 
    
