@@ -1,7 +1,9 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Dict, List, Callable
 from boto3 import Session
-from langchain_core.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
+# from langchain_core.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
+
+from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
 
 if TYPE_CHECKING:
     from langchain_core.messages import BaseMessage

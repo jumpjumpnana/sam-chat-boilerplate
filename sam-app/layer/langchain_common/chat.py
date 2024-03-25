@@ -17,9 +17,7 @@ from langchain.prompts import (
     PromptTemplate
 )
 from langchain.llms.base import LLM
-# from callback import StreamingAPIGatewayWebSocketCallbackHandler
-from deepinfracallback import StreamingAPIGatewayWebSocketCallbackHandler
-
+from callback import StreamingAPIGatewayWebSocketCallbackHandler
 
 from langchain.llms import DeepInfra
 from langchain_community.chat_models import ChatDeepInfra
@@ -60,33 +58,28 @@ def chat(
         on_end=lambda: json.dumps({"kind": "end"}),
         on_err=lambda e: json.dumps({"kind": "error"}),
     )
+
     llm.callbacks = [callback]
 
-    # chat_memory = DynamoDBChatMessageHistory(
-    #     table_name=session_table_name,
-    #     # use connection_id as session_id for simplicity.
-    #     # in production, you should design the session_id yourself
-    #     session_id=db_connect_id,
-    #     boto3_session=boto3_session,
-    # )
-    # print("History"+chat_memory)
+    history = DynamoDBChatMessageHistory(
+        table_name=session_table_name,
+        # use connection_id as session_id for simplicity.
+        # in production, you should design the session_id yourself
+        session_id=db_connect_id,
+        boto3_session=boto3_session,
+    )
 
     prompt_template = ChatPromptTemplate.from_messages([
         SystemMessagePromptTemplate.from_template(body["input"]["system"]),
         HumanMessagePromptTemplate.from_template(body["input"]["human"]),
-        # ("system", "Character: Mika. In this situation, respond as Mika would and follow Mika's persona. Persona: Mika is a middle school teacher in Beijing China. She like to say OMG on every sentence."),
-        # ("user", "what's your name"),
-        # # MessagesPlaceholder(variable_name="history"),
-        # # HumanMessagePromptTemplate.from_template(body["input"]["human"])
     ])
 
-    # memory = ConversationBufferMemory(ai_prefix=ai_prefix)
-    conversation = ConversationChain(llm=llm)
+    memory = ConversationBufferMemory(ai_prefix=ai_prefix,chat_memory=history)
+    conversation = ConversationChain(llm=llm,memory=memory)
     conversation.prompt = prompt_template
 
     a = conversation.predict(input=body["input"]["human"])
     print("a:"+a)
-
 
 
    
