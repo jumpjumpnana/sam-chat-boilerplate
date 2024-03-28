@@ -14,6 +14,7 @@ from langchain.prompts import (
     MessagesPlaceholder, 
     SystemMessagePromptTemplate, 
     HumanMessagePromptTemplate,
+    AIMessagePromptTemplate,
     PromptTemplate
 )
 from langchain.llms.base import LLM
@@ -44,7 +45,11 @@ def chat(
     # body = json.loads(event["body"])
 
     db_connect_id = body["connection_id"]
-    print("db_connect_id:"+db_connect_id)
+    greeting = body["greeting"]
+    userInfo = body["userInfo"]
+    systemInfo = body["system"]
+    inputInfo = body["input"]
+    # print("db_connect_id:"+db_connect_id)
 
     # set callback handler
     # so that every time the model generates a chunk of response,
@@ -66,20 +71,26 @@ def chat(
         # use connection_id as session_id for simplicity.
         # in production, you should design the session_id yourself
         session_id=db_connect_id,
-        boto3_session=boto3_session,
+        # boto3_session=boto3_session,
     )
-
     prompt_template = ChatPromptTemplate.from_messages([
-        SystemMessagePromptTemplate.from_template(body["input"]["system"]),
-        HumanMessagePromptTemplate.from_template(body["input"]["human"]),
+        SystemMessagePromptTemplate.from_template(systemInfo),
+        MessagesPlaceholder(variable_name="history"),
+        AIMessagePromptTemplate.from_template(greeting),
+        HumanMessagePromptTemplate.from_template(userInfo),
+        HumanMessagePromptTemplate.from_template(inputInfo),
     ])
 
-    memory = ConversationBufferMemory(ai_prefix=ai_prefix,chat_memory=history)
+    # memory = ConversationBufferMemory(ai_prefix=ai_prefix,chat_memory=history,return_messages=True)
+    memory = ConversationBufferMemory(chat_memory=history,return_messages=True)
     conversation = ConversationChain(llm=llm,memory=memory)
     conversation.prompt = prompt_template
 
-    a = conversation.predict(input=body["input"]["human"])
+    a = conversation.predict(input=inputInfo)
     print("a:"+a)
+    messages = history.messages
+    print("history:", ', '.join(f"{message.type}: {message.content}" for message in messages))
+
 
 
    
