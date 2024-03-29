@@ -22,7 +22,8 @@ from callback import StreamingAPIGatewayWebSocketCallbackHandler
 
 from langchain.llms import DeepInfra
 from langchain_community.chat_models import ChatDeepInfra
-from langchain_core.messages import HumanMessage, SystemMessage
+from langchain_core.messages import HumanMessage, SystemMessage, AIMessage
+from langchain.schema import messages_to_dict
 
 
 
@@ -41,15 +42,16 @@ def chat(
     domain = event["requestContext"]["domainName"]
     stage = event["requestContext"]["stage"]
     connection_id = event["requestContext"]["connectionId"]
-    body = json.loads(event["body"],strict=False)
-    # body = json.loads(event["body"])
+    bodyJson = event["body"]
+    body = json.loads(bodyJson)
 
-    db_connect_id = body["connection_id"]
-    greeting = body["greeting"]
-    userInfo = body["userInfo"]
-    systemInfo = body["system"]
-    inputInfo = body["input"]
-    # print("db_connect_id:"+db_connect_id)
+    # body = json.loads(event["body"],strict=False)
+
+    db_connect_id = body.get("connection_id")
+    greeting = body.get("greeting")
+    userInfo = body.get("userInfo")
+    systemInfo = body.get("system")
+    inputInfo = body.get("input")
 
     # set callback handler
     # so that every time the model generates a chunk of response,
@@ -73,101 +75,73 @@ def chat(
         session_id=db_connect_id,
         # boto3_session=boto3_session,
     )
+    # setting greeting
+    if userInfo is not None and userInfo != "":
+        history.add_user_message(HumanMessage(content=userInfo,example=True))
+    if greeting is not None and greeting != "":
+        history.add_ai_message(AIMessage(content=greeting,example=True))
+
+    # print(history.messages)
+
+
     prompt_template = ChatPromptTemplate.from_messages([
         SystemMessagePromptTemplate.from_template(systemInfo),
         MessagesPlaceholder(variable_name="history"),
-        AIMessagePromptTemplate.from_template(greeting),
-        HumanMessagePromptTemplate.from_template(userInfo),
-        HumanMessagePromptTemplate.from_template(inputInfo),
+        HumanMessagePromptTemplate.from_template(inputInfo)
     ])
-
     # memory = ConversationBufferMemory(ai_prefix=ai_prefix,chat_memory=history,return_messages=True)
     memory = ConversationBufferMemory(chat_memory=history,return_messages=True)
     conversation = ConversationChain(llm=llm,memory=memory)
     conversation.prompt = prompt_template
 
     a = conversation.predict(input=inputInfo)
-    print("a:"+a)
-    messages = history.messages
-    print("history:", ', '.join(f"{message.type}: {message.content}" for message in messages))
-
-
-
-   
+    # print("a:"+a)
+    # messages = history.messages
+    # print("history:", ', '.join(f"{message.type}: {message.content}" for message in messages))
 
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+    # [SystemMessage(content='You are a professional translator that translate English to Chinese', additional_kwargs={}), HumanMessage(content='Did you eat in this morning', additional_kwargs={}, example=False)]
+
+
+
+
+    # try:
+    #         # messages = history.messages
+    #         messagesDef = [
+    #             ("system", "You are a helpful AI bot. Your name is Lalalala."),
+    #             ("user", "Hello, I am Bob"),
+    #             ("ai", "I'm Nana")
+    #         ]
+
+    #         messagesDef = messages_to_dict(messagesDef)
+    #         # print("messagesDict:", ', '.join(f"{message['type']}: {message['content']}" for message in messagesDict))
+
+    #         history.table.put_item(
+    #             Item={"SessionId": db_connect_id, "History": messagesDef}
+    #         )
+    #     except Exception as e:
+    #         print(e)
 
      # prompt_template = PromptTemplate(input_variables=["history", "system"], template=body["input"]["system"])
 
     # prompt_template = SystemMessagePromptTemplate.from_template(body["input"]["system"])
     # prompt_template = PromptTemplate.from_template(body["input"]["human"]).partial(system=body["input"]["system"])
 
-
-    # system_message = SystemMessage(content=body["input"]["system"])
-    # prompt_template = ChatPromptTemplate(messages=[system_message])
-     # conversation = ConversationChain(
-    #     llm=llm, 
-    #     verbose=True,
-    #     memory=memory
-    # )
-       
-    # conversation.predict(input="what is your name")
-    # conversation.from_template = SystemMessagePromptTemplate.from_template(body["input"]["system"])
-
-
-    #stream=True,
-    #temperature=0.7,
-    # max_tokens =200,
-
-
-
-      # prompttest =  PromptTemplate.from_template("{ \"messages\": [ { \"role\": \"system\", \"content\": \"Character: Mika. In this situation, respond as Mika would and follow Mika's persona. Persona: Mika is a middle school teacher in Beijing China. She like to say OMG on every sentence.\" }, { \"role\": \"user\", \"content\": \"what is your name\" } ] }")
-    # prompttest = ChatPromptTemplate.from_messages([
-        # {
-        #   "role": "system",
-        #   "content": "Character: Mika. In this situation, respond as Mika would and follow Mika's persona. Persona: Mika is a middle school teacher in Beijing China. She like to say OMG on every sentence."
-        # }
-        # {
-        #   "role": "user",
-        #   "content": "what is your name"
-        # }
-    # ])
-
-
-
-# { "messages": [
-#     {
-#       "role": "system",
-#       "content": "Character: Mika. In this situation, respond as Mika would and follow Mika's persona. Persona: Mika is a middle school teacher in Beijing China. She like to say OMG on every sentence."
-#     }
-#     {
-#       "role": "user",
-#       "content": "what is your name"
-#     }
-#   ]
-# } 
-
-
-
-# prompttest = [
-#         f"{role}: {content}"
-#         for role, content in (
-#             ("system", body["input"]["system"]),
-#             ("user", body["input"]["human"])
-#         )
-#     ]
-#     print("system:"+body["input"]["system"])
-#     print("human:"+body["input"]["human"])
-
-#     example_prompt = PromptTemplate(
-#         input_variables=[""],
-#         template=prompttest,
-#     )
-
-
-   
 
 
 
