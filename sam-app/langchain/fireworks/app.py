@@ -9,8 +9,8 @@ from langchain.prompts import (
     HumanMessagePromptTemplate,
     PromptTemplate
 )
-# from langchain_fireworks import ChatFireworks
-from langchain_community.chat_models import ChatFireworks
+from langchain_fireworks import ChatFireworks
+# from langchain_community.chat_models import ChatFireworks
 
 # environment variables
 session_table_name = os.environ["SessionTableName"]
@@ -24,7 +24,7 @@ model_name = os.environ.get("Model_Name")
 
 
 os.environ['FIREWORKS_API_KEY'] = api_key
-llm = ChatFireworks(model=model_name)
+llm = ChatFireworks(model=model_name,streaming=True)
 llm.model_kwargs = {"max_tokens":200,'temperature': 0.7, 'top_p': 0.9}
 
 print("model:"+model_name)
