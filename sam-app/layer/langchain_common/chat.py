@@ -1,5 +1,6 @@
 
 import os
+import base64
 
 import json
 from boto3 import Session
@@ -27,6 +28,19 @@ from langchain.schema import messages_to_dict
 
 
 
+def decode_base64_to_string(encoded_string):
+    # 将编码后的字符串转换为字节
+    bytes_to_decode = encoded_string.encode('utf-8')
+
+    # 对字节进行Base64解码
+    decoded_bytes = base64.b64decode(bytes_to_decode)
+
+    # 将解码后的字节转换回字符串
+    decoded_string = decoded_bytes.decode('utf-8')
+
+    return decoded_string
+
+
 
 def chat(
     event: dict,
@@ -43,15 +57,25 @@ def chat(
     stage = event["requestContext"]["stage"]
     connection_id = event["requestContext"]["connectionId"]
     bodyJson = event["body"]
-    body = json.loads(bodyJson)
+    bd = json.dumps(bodyJson)
+    body = json.loads(bd,strict=False)
 
     # body = json.loads(event["body"],strict=False)
 
     db_connect_id = body.get("connection_id")
     greeting = body.get("greeting")
     userInfo = body.get("userInfo")
-    systemInfo = body.get("system")
+    sysStr = body.get("system").strip()
+    systemInfo = decode_base64_to_string(sysStr)
     inputInfo = body.get("input")
+
+    # if sysStr is not None and sysStr != "":
+    #     systemInfo = decode_base64_to_string(sysStr)
+    # else
+    #     systemInfo = ""
+    
+
+    print("systemInfo:"+systemInfo)
 
     # set callback handler
     # so that every time the model generates a chunk of response,
@@ -76,16 +100,19 @@ def chat(
         # boto3_session=boto3_session,
     )
     # setting greeting
-    if userInfo is not None and userInfo != "":
-        history.add_user_message(HumanMessage(content=userInfo,example=True))
-    if greeting is not None and greeting != "":
-        history.add_ai_message(AIMessage(content=greeting,example=True))
+    # if userInfo is not None and userInfo != "":
+    #     history.add_user_message(HumanMessage(content=userInfo,example=True))
+    # if greeting is not None and greeting != "":
+    #     history.add_ai_message(AIMessage(content=greeting,example=True))
 
     # print(history.messages)
 
 
     prompt_template = ChatPromptTemplate.from_messages([
         SystemMessagePromptTemplate.from_template(systemInfo),
+        HumanMessage(content=userInfo,example=True),
+        AIMessage(content=greeting,example=True),
+
         MessagesPlaceholder(variable_name="history"),
         HumanMessagePromptTemplate.from_template(inputInfo)
     ])
@@ -95,7 +122,7 @@ def chat(
     conversation.prompt = prompt_template
 
     a = conversation.predict(input=inputInfo)
-    # print("a:"+a)
+    print("a:"+a)
     # messages = history.messages
     # print("history:", ', '.join(f"{message.type}: {message.content}" for message in messages))
 

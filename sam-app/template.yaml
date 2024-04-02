@@ -36,6 +36,7 @@ Resources:
   WebSocketAPIDeployment:
     Type: AWS::ApiGatewayV2::Deployment
     DependsOn:
+      - LangChainFireworksMixtralMoE8x7BInstructRoute
       - LangChainDeepinfraPygmalion13b4bit128gRoute
       - LangChainDeepinfraDolphin26mixtral8x7bRoute
       - LangChainDeepinfraAiroboros70bRoute
@@ -213,7 +214,7 @@ Resources:
   LangChainMistralMediumFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: langchain/mistral/medium/
+      CodeUri: langchain/mistral/
       Layers:
         - !Ref LangChainCommonLayer
       Environment:
@@ -268,7 +269,7 @@ Resources:
   LangChainDeepinfraGrypheMythonMaxL213bFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: langchain/deepinfra/gryphe-mythomax-l2-13b/
+      CodeUri: langchain/deepinfra/
       Layers:
         - !Ref LangChainCommonLayer
       Environment:
@@ -321,7 +322,7 @@ Resources:
   LangChainDeepinfraMistral7BInstructv01Function:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: langchain/deepinfra/mistralai-Mistral-7B-Instruct-v0.1/
+      CodeUri: langchain/deepinfra/
       Layers:
         - !Ref LangChainCommonLayer
       Environment:
@@ -375,7 +376,7 @@ Resources:
   LangChainDeepinfraMixtral8x7BInstructv01Function:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: langchain/deepinfra/mistralai-Mixtral-8x7B-Instruct-v0.1/
+      CodeUri: langchain/deepinfra/
       Layers:
         - !Ref LangChainCommonLayer
       Environment:
@@ -428,7 +429,7 @@ Resources:
   LangChainDeepinfraAiroborosl270bgpt4141Function:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: langchain/deepinfra/jondurbin-airoboros-l2-70b-gpt4-1.4.1/
+      CodeUri: langchain/deepinfra/
       Layers:
         - !Ref LangChainCommonLayer
       Environment:
@@ -482,7 +483,7 @@ Resources:
   LangChainDeepinfraLzlv70bfp16hfFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: langchain/deepinfra/lizpreciatior-lzlv_70b_fp16_hf/
+      CodeUri: langchain/deepinfra/
       Layers:
         - !Ref LangChainCommonLayer
       Environment:
@@ -536,7 +537,7 @@ Resources:
   LangChainDeepinfraAiroboros70bFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: langchain/deepinfra/deepinfra-airoboros-70b/
+      CodeUri: langchain/deepinfra/
       Layers:
         - !Ref LangChainCommonLayer
       Environment:
@@ -589,7 +590,7 @@ Resources:
   LangChainDeepinfraDolphin26mixtral8x7bFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: langchain/deepinfra/cognitivecomputations-dolphin-2.6-mixtral-8x7b/
+      CodeUri: langchain/deepinfra/
       Layers:
         - !Ref LangChainCommonLayer
       Environment:
@@ -641,7 +642,7 @@ Resources:
   LangChainDeepinfraPygmalion13b4bit128gFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: langchain/deepinfra/DeepInfra-pygmalion-13b-4bit-128g/
+      CodeUri: langchain/deepinfra/
       Layers:
         - !Ref LangChainCommonLayer
       Environment:
@@ -667,6 +668,59 @@ Resources:
     Properties:
       Action: lambda:InvokeFunction
       FunctionName: !Ref LangChainDeepinfraPygmalion13b4bit128gFunction
+      Principal: apigateway.amazonaws.com
+
+
+       # langchain/fireworks/Mixtral-MoE-8x7B-Instruct
+  LangChainFireworksMixtralMoE8x7BInstructRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref WebSocketAPI
+      RouteKey: langchain/fireworks/Mixtral-MoE-8x7B-Instruct
+      AuthorizationType: NONE
+      Target: !Join
+        - "/"
+        - - "integrations"
+          - !Ref LangChainFireworksMixtralMoE8x7BInstructIntegration
+  LangChainFireworksMixtralMoE8x7BInstructIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref WebSocketAPI
+      IntegrationType: AWS
+      IntegrationUri:
+        # see https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html
+        Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LangChainFireworksMixtralMoE8x7BInstructFunction.Arn}/invocations
+      RequestParameters: *AsyncLambdaIntegrationRequestParameters
+      RequestTemplates: *AsyncLambdaIntegrationRequestTemplates
+  LangChainFireworksMixtralMoE8x7BInstructFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: langchain/fireworks/
+      Layers:
+        - !Ref LangChainCommonLayer
+      Environment:
+        Variables:
+          API_Base: "https://api.fireworks.ai/inference/v1/chat/completions"
+          API_Key: "WglavV6hm0RLeZohaDZcrEjGAedu04GnJbDazBJ2PzmY7nRl"
+          Model_Name: "accounts/fireworks/models/mixtral-8x7b-instruct"
+          SessionTableName: !Ref SessionTable
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SessionTable
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+  LangChainFireworksMixtralMoE8x7BInstructPermission:
+    Type: AWS::Lambda::Permission
+    DependsOn:
+      - WebSocketAPI
+      - SessionTable
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref LangChainFireworksMixtralMoE8x7BInstructFunction
       Principal: apigateway.amazonaws.com
  
 

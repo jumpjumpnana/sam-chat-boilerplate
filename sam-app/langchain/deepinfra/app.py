@@ -25,13 +25,7 @@ api_key = os.environ.get(
 )
 model_name = os.environ.get("Model_Name")
 
-# init dependencies outside of handler
-# llm = OpenAI(
-#     openai_api_base=api_base,
-#     openai_api_key=api_key,
-#     model_name = model_name,
-#     streaming=True,
-# )
+
 os.environ['DEEPINFRA_API_TOKEN'] = api_key
 llm = ChatDeepInfra(model=model_name,streaming=True)
 llm.model_kwargs = {'temperature': 0.7, 'repetition_penalty': 1, 'max_new_tokens': 200, 'top_p': 0.9}

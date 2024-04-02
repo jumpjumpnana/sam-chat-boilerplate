@@ -1,6 +1,5 @@
 import os
 import boto3
-from langchain.llms.openai import OpenAI
 from langchain.chains.conversation.prompt import PROMPT
 from chat import chat
 from langchain.prompts import (
@@ -10,10 +9,8 @@ from langchain.prompts import (
     HumanMessagePromptTemplate,
     PromptTemplate
 )
-from langchain_community.chat_models import ChatDeepInfra
-
-# from mistralai.client import MistralClient
-# from mistralai.models.chat_completion import ChatMessage
+# from langchain_fireworks import ChatFireworks
+from langchain_community.chat_models import ChatFireworks
 
 # environment variables
 session_table_name = os.environ["SessionTableName"]
@@ -25,16 +22,11 @@ api_key = os.environ.get(
 )
 model_name = os.environ.get("Model_Name")
 
-# init dependencies outside of handler
-# llm = OpenAI(
-#     openai_api_base=api_base,
-#     openai_api_key=api_key,
-#     model_name = model_name,
-#     streaming=True,
-# )
-os.environ['DEEPINFRA_API_TOKEN'] = api_key
-llm = ChatDeepInfra(model=model_name,streaming=True)
-llm.model_kwargs = {'temperature': 0.7, 'repetition_penalty': 1, 'max_new_tokens': 200, 'top_p': 0.9}
+
+os.environ['FIREWORKS_API_KEY'] = api_key
+llm = ChatFireworks(model=model_name)
+llm.model_kwargs = {"max_tokens":200,'temperature': 0.7, 'top_p': 0.9}
+
 print("model:"+model_name)
 
 
@@ -47,3 +39,6 @@ def handler(event, context):
     # call the common chat function in the layer/langchain_common/chat.py
     chat(event, llm, boto3_session, session_table_name, ai_prefix, prompt)
     return {"statusCode": 200}
+
+
+# "model": "accounts/fireworks/models/mixtral-8x7b-instruct", "max_tokens": 4096, "top_p": 1, "top_k": 40, "presence_penalty": 0, "frequency_penalty": 0, "temperature": 0.6, "messages": []
