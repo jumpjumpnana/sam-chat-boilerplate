@@ -38,14 +38,14 @@ def save_character_definition(session: Session,table_name: str,item):
     return response
 
 # 更新数据到 DynamoDB
-def update_character_definition(session: Session,table_name: str,id: str, updated_values: dict):
+def update_character_definition(session: Session,table_name: str,id: str, name: str,updated_values: dict):
     ddb = session.resource("dynamodb")
     table = ddb.Table(table_name)
     response = table.update_item(
         Key={'id': id},  # 指定主键 id
         UpdateExpression='SET #n = :val',  # 更新表达式，设置属性名为 #n 的值为 :val
-        ExpressionAttributeNames={'#n': 'name'},  # 定义属性名映射
-        ExpressionAttributeValues={':val': updated_values['name']}  # 定义属性值映射
+        ExpressionAttributeNames={'#n': name},  # 定义属性名映射
+        ExpressionAttributeValues={':val': updated_values[name]}  # 定义属性值映射
     )
     return response
 # 删除数据从 DynamoDB

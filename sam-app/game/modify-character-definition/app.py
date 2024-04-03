@@ -41,19 +41,19 @@ def handler(event, context):
         elif modify == 1:
             if greeting is not None:
                 updated_values = {'greeting': greeting}  # 要更新的值
-                update_response = update_character_definition(session,session_table_name,id, updated_values)
+                update_response = update_character_definition(session,session_table_name,id,'greeting', updated_values)
                 print('Update greeting response:', update_response)
             if personality is not None:
                 updated_values = {'personality': personality}  # 要更新的值
-                update_response = update_character_definition(session,session_table_name,id, updated_values)
+                update_response = update_character_definition(session,session_table_name,id,'personality', updated_values)
                 print('Update personality response:', update_response)
             if scenario is not None:
                 updated_values = {'scenario': scenario}  # 要更新的值
-                update_response = update_character_definition(session,session_table_name,id, updated_values)
+                update_response = update_character_definition(session,session_table_name,id,'scenario', updated_values)
                 print('Update scenario response:', update_response)
             if example is not None:
                 updated_values = {'example': example}  # 要更新的值
-                update_response = update_character_definition(session,session_table_name,id, updated_values)
+                update_response = update_character_definition(session,session_table_name,id,'example', updated_values)
                 print('Update example response:', update_response)
         # 删除数据
         elif modify == 2:
@@ -67,7 +67,6 @@ def handler(event, context):
         error_message = "Exception: " + str(e)
         return {"statusCode": 200, "body": error_message}
 
-    print("====这里5")
     return {"statusCode": 200, "body": "invalid route"}
 
 
