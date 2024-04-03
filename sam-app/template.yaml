@@ -57,6 +57,7 @@ Resources:
       - LangChainMistralMediumRoute
       - LangChainBedrockRoute
       - LangChainOpenAIRoute
+      - ModifyCharacterDefinitionRoute
       - BedrockRoute
       - OnConnectRoute
       - OnDefaultRoute
@@ -69,6 +70,13 @@ Resources:
       StageName: Production
       DeploymentId: !Ref WebSocketAPIDeployment
       ApiId: !Ref WebSocketAPI
+
+  CharacterDefinition:
+    Type: AWS::Serverless::SimpleTable
+    Properties:
+      PrimaryKey:
+        Name: id
+        Type: String
 
   SessionTable:
     Type: AWS::Serverless::SimpleTable
@@ -1212,6 +1220,57 @@ Resources:
       Principal: apigateway.amazonaws.com
 
 
+
+      # ModifyCharacterDefinitionRoute
+  ModifyCharacterDefinitionRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref WebSocketAPI
+      RouteKey: ModifyCharacterDefinition
+      AuthorizationType: NONE
+      Target: !Join
+        - "/"
+        - - "integrations"
+          - !Ref ModifyCharacterDefinitionIntegration
+  ModifyCharacterDefinitionIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref WebSocketAPI
+      IntegrationType: AWS
+      IntegrationUri:
+        # see https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html
+        Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ModifyCharacterDefinitionFunction.Arn}/invocations
+      RequestParameters: *AsyncLambdaIntegrationRequestParameters
+      RequestTemplates: *AsyncLambdaIntegrationRequestTemplates
+  ModifyCharacterDefinitionFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: game/modify-character-definition/
+      Layers:
+        - !Ref CommonLayer
+      Environment:
+        Variables:
+          SessionTableName: !Ref CharacterDefinition
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref CharacterDefinition
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+  ModifyCharacterDefinitionPermission:
+    Type: AWS::Lambda::Permission
+    DependsOn:
+      - WebSocketAPI
+      - CharacterDefinition
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref ModifyCharacterDefinitionFunction
+      Principal: apigateway.amazonaws.com
+
+
   # bedrock
   BedrockRoute:
     Type: AWS::ApiGatewayV2::Route
@@ -1372,6 +1431,16 @@ Resources:
     Type: AWS::Serverless::LayerVersion
     Properties:
       ContentUri: layer/langchain_common/
+      CompatibleRuntimes:
+        - python3.12
+    Metadata:
+      BuildMethod: python3.12
+
+  # common layer
+  CommonLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      ContentUri: layer/common/
       CompatibleRuntimes:
         - python3.12
     Metadata:
