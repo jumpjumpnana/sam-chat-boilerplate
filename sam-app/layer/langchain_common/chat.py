@@ -26,6 +26,14 @@ from langchain_community.chat_models import ChatDeepInfra
 from langchain_core.messages import HumanMessage, SystemMessage, AIMessage
 from langchain.schema import messages_to_dict
 
+from characterdao import (
+    CharacterDefinition,
+    save_character_definition,
+    update_character_definition,
+    delete_character_definition,
+    get_character_definition
+)
+
 
 
 def decode_base64_to_string(encoded_string):
@@ -47,6 +55,7 @@ def chat(
     llm: LLM,
     boto3_session: Session,
     session_table_name: str,
+    cd_table_name: str,
     ai_prefix: str,
     prompt: PromptTemplate,
 ):
@@ -68,6 +77,7 @@ def chat(
     sysStr = body.get("system").strip()
     systemInfo = decode_base64_to_string(sysStr)
     inputInfo = body.get("input")
+    cdId = body.get("cdId")# CharacterDefinationId
 
     # if sysStr is not None and sysStr != "":
     #     systemInfo = decode_base64_to_string(sysStr)
@@ -99,14 +109,12 @@ def chat(
         session_id=db_connect_id,
         # boto3_session=boto3_session,
     )
-    # setting greeting
-    # if userInfo is not None and userInfo != "":
-    #     history.add_user_message(HumanMessage(content=userInfo,example=True))
-    # if greeting is not None and greeting != "":
-    #     history.add_ai_message(AIMessage(content=greeting,example=True))
 
-    # print(history.messages)
-
+    # setting defination
+    if cdId:
+        char_def = get_character_definition(boto3_session, cd_table_name, cdId)
+        if char_def:
+            print(char_def)
 
     prompt_template = ChatPromptTemplate.from_messages([
         SystemMessagePromptTemplate.from_template(systemInfo),

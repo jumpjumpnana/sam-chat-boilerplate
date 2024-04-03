@@ -29,6 +29,13 @@ class CharacterDefinition:
             item_dict['example'] = self.example
         return item_dict
 
+    def from_dict(self, item_dict: dict):
+        self.id = item_dict.get('id')
+        self.greeting = item_dict.get('greeting')
+        self.personality = item_dict.get('personality')
+        self.scenario = item_dict.get('scenario')
+        self.example = item_dict.get('example')
+
 
 # 保存数据到 DynamoDB
 def save_character_definition(session: Session,table_name: str,item):
@@ -56,4 +63,25 @@ def delete_character_definition(session: Session,table_name: str,id: str):
         Key={'id': id}  # 指定要删除的项目的主键 id
     )
     return response
+
+def get_character_definition(session: Session, table_name: str, id: str) -> Optional[CharacterDefinition]:
+    ddb = session.resource("dynamodb")
+    table = ddb.Table(table_name)
+    try:
+        response = table.get_item(Key={'id': id})
+        item = response.get('Item')
+        if item:
+            char_def = CharacterDefinition(
+                id=item['id'],
+                greeting=item.get('greeting'),
+                personality=item.get('personality'),
+                scenario=item.get('scenario'),
+                example=item.get('example')
+            )
+            return char_def
+        else:
+            return None
+    except ClientError as e:
+        print("Error:", e)
+        return None
 

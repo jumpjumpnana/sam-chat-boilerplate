@@ -289,15 +289,25 @@ Resources:
       CodeUri: langchain/deepinfra/
       Layers:
         - !Ref LangChainCommonLayer
+        - !Ref CommonLayer
       Environment:
         Variables:
           API_Base: "https://api.deepinfra.com/v1/openai"
           API_Key: "1iubpJyGRvVCwIcbwaamAro95AqWR9mE"
           Model_Name: "Gryphe/MythoMax-L2-13b"
           SessionTableName: !Ref SessionTable
+          CDTableName: !Ref CharacterDefinition
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref SessionTable
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+        - DynamoDBCrudPolicy:
+            TableName: !Ref CharacterDefinition
         - Statement:
             - Effect: Allow
               Action:
@@ -309,6 +319,7 @@ Resources:
     DependsOn:
       - WebSocketAPI
       - SessionTable
+      - CharacterDefinition
     Properties:
       Action: lambda:InvokeFunction
       FunctionName: !Ref LangChainDeepinfraGrypheMythonMaxL213bFunction
@@ -342,15 +353,25 @@ Resources:
       CodeUri: langchain/deepinfra/
       Layers:
         - !Ref LangChainCommonLayer
+        - !Ref CommonLayer
       Environment:
         Variables:
           API_Base: "https://api.deepinfra.com/v1/openai"
           API_Key: "1iubpJyGRvVCwIcbwaamAro95AqWR9mE"
           Model_Name: "mistralai/Mistral-7B-Instruct-v0.1"
           SessionTableName: !Ref SessionTable
+          CDTableName: !Ref CharacterDefinition
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref SessionTable
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+        - DynamoDBCrudPolicy:
+            TableName: !Ref CharacterDefinition
         - Statement:
             - Effect: Allow
               Action:
@@ -362,6 +383,7 @@ Resources:
     DependsOn:
       - WebSocketAPI
       - SessionTable
+      - CharacterDefinition
     Properties:
       Action: lambda:InvokeFunction
       FunctionName: !Ref LangChainDeepinfraMistral7BInstructv01Function
@@ -396,15 +418,25 @@ Resources:
       CodeUri: langchain/deepinfra/
       Layers:
         - !Ref LangChainCommonLayer
+        - !Ref CommonLayer
       Environment:
         Variables:
           API_Base: "https://api.deepinfra.com/v1/openai"
           API_Key: "1iubpJyGRvVCwIcbwaamAro95AqWR9mE"
           Model_Name: "mistralai/Mixtral-8x7B-Instruct-v0.1"
           SessionTableName: !Ref SessionTable
+          CDTableName: !Ref CharacterDefinition
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref SessionTable
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+        - DynamoDBCrudPolicy:
+            TableName: !Ref CharacterDefinition
         - Statement:
             - Effect: Allow
               Action:
@@ -416,6 +448,7 @@ Resources:
     DependsOn:
       - WebSocketAPI
       - SessionTable
+      - CharacterDefinition
     Properties:
       Action: lambda:InvokeFunction
       FunctionName: !Ref LangChainDeepinfraMixtral8x7BInstructv01Function
@@ -449,15 +482,25 @@ Resources:
       CodeUri: langchain/deepinfra/
       Layers:
         - !Ref LangChainCommonLayer
+        - !Ref CommonLayer
       Environment:
         Variables:
           API_Base: "https://api.deepinfra.com/v1/openai"
           API_Key: "1iubpJyGRvVCwIcbwaamAro95AqWR9mE"
           Model_Name: "jondurbin/airoboros-l2-70b-gpt4-1.4.1"
           SessionTableName: !Ref SessionTable
+          CDTableName: !Ref CharacterDefinition
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref SessionTable
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+        - DynamoDBCrudPolicy:
+            TableName: !Ref CharacterDefinition
         - Statement:
             - Effect: Allow
               Action:
@@ -469,6 +512,7 @@ Resources:
     DependsOn:
       - WebSocketAPI
       - SessionTable
+      - CharacterDefinition
     Properties:
       Action: lambda:InvokeFunction
       FunctionName: !Ref LangChainDeepinfraAiroborosl270bgpt4141Function
@@ -503,15 +547,25 @@ Resources:
       CodeUri: langchain/deepinfra/
       Layers:
         - !Ref LangChainCommonLayer
+        - !Ref CommonLayer
       Environment:
         Variables:
           API_Base: "https://api.deepinfra.com/v1/openai"
           API_Key: "1iubpJyGRvVCwIcbwaamAro95AqWR9mE"
           Model_Name: "lizpreciatior/lzlv_70b_fp16_hf"
           SessionTableName: !Ref SessionTable
+          CDTableName: !Ref CharacterDefinition
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref SessionTable
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+        - DynamoDBCrudPolicy:
+            TableName: !Ref CharacterDefinition
         - Statement:
             - Effect: Allow
               Action:
@@ -523,6 +577,7 @@ Resources:
     DependsOn:
       - WebSocketAPI
       - SessionTable
+      - CharacterDefinition
     Properties:
       Action: lambda:InvokeFunction
       FunctionName: !Ref LangChainDeepinfraLzlv70bfp16hfFunction
@@ -557,15 +612,25 @@ Resources:
       CodeUri: langchain/deepinfra/
       Layers:
         - !Ref LangChainCommonLayer
+        - !Ref CommonLayer
       Environment:
         Variables:
           API_Base: "https://api.deepinfra.com/v1/openai"
           API_Key: "1iubpJyGRvVCwIcbwaamAro95AqWR9mE"
           Model_Name: "deepinfra/airoboros-70b"
           SessionTableName: !Ref SessionTable
+          CDTableName: !Ref CharacterDefinition
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref SessionTable
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+        - DynamoDBCrudPolicy:
+            TableName: !Ref CharacterDefinition
         - Statement:
             - Effect: Allow
               Action:
@@ -577,6 +642,7 @@ Resources:
     DependsOn:
       - WebSocketAPI
       - SessionTable
+      - CharacterDefinition
     Properties:
       Action: lambda:InvokeFunction
       FunctionName: !Ref LangChainDeepinfraAiroboros70bFunction
@@ -610,15 +676,25 @@ Resources:
       CodeUri: langchain/deepinfra/
       Layers:
         - !Ref LangChainCommonLayer
+        - !Ref CommonLayer
       Environment:
         Variables:
           API_Base: "https://api.deepinfra.com/v1/openai"
           API_Key: "1iubpJyGRvVCwIcbwaamAro95AqWR9mE"
           Model_Name: "cognitivecomputations/dolphin-2.6-mixtral-8x7b"
           SessionTableName: !Ref SessionTable
+          CDTableName: !Ref CharacterDefinition
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref SessionTable
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+        - DynamoDBCrudPolicy:
+            TableName: !Ref CharacterDefinition
         - Statement:
             - Effect: Allow
               Action:
@@ -630,6 +706,7 @@ Resources:
     DependsOn:
       - WebSocketAPI
       - SessionTable
+      - CharacterDefinition
     Properties:
       Action: lambda:InvokeFunction
       FunctionName: !Ref LangChainDeepinfraDolphin26mixtral8x7bFunction
@@ -662,15 +739,25 @@ Resources:
       CodeUri: langchain/deepinfra/
       Layers:
         - !Ref LangChainCommonLayer
+        - !Ref CommonLayer
       Environment:
         Variables:
           API_Base: "https://api.deepinfra.com/v1/openai"
           API_Key: "1iubpJyGRvVCwIcbwaamAro95AqWR9mE"
           Model_Name: "DeepInfra/pygmalion-13b-4bit-128g"
           SessionTableName: !Ref SessionTable
+          CDTableName: !Ref CharacterDefinition
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref SessionTable
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+        - DynamoDBCrudPolicy:
+            TableName: !Ref CharacterDefinition
         - Statement:
             - Effect: Allow
               Action:
@@ -682,6 +769,7 @@ Resources:
     DependsOn:
       - WebSocketAPI
       - SessionTable
+      - CharacterDefinition
     Properties:
       Action: lambda:InvokeFunction
       FunctionName: !Ref LangChainDeepinfraPygmalion13b4bit128gFunction
@@ -715,15 +803,25 @@ Resources:
       CodeUri: langchain/fireworks/
       Layers:
         - !Ref LangChainCommonLayer
+        - !Ref CommonLayer
       Environment:
         Variables:
           API_Base: "https://api.fireworks.ai/inference/v1/chat/completions"
           API_Key: "WglavV6hm0RLeZohaDZcrEjGAedu04GnJbDazBJ2PzmY7nRl"
           Model_Name: "accounts/fireworks/models/mixtral-8x7b-instruct"
           SessionTableName: !Ref SessionTable
+          CDTableName: !Ref CharacterDefinition
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref SessionTable
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+        - DynamoDBCrudPolicy:
+            TableName: !Ref CharacterDefinition
         - Statement:
             - Effect: Allow
               Action:
@@ -735,6 +833,7 @@ Resources:
     DependsOn:
       - WebSocketAPI
       - SessionTable
+      - CharacterDefinition
     Properties:
       Action: lambda:InvokeFunction
       FunctionName: !Ref LangChainFireworksMixtralMoE8x7BInstructFunction
@@ -769,15 +868,25 @@ Resources:
       CodeUri: langchain/fireworks/
       Layers:
         - !Ref LangChainCommonLayer
+        - !Ref CommonLayer
       Environment:
         Variables:
           API_Base: "https://api.fireworks.ai/inference/v1/chat/completions"
           API_Key: "WglavV6hm0RLeZohaDZcrEjGAedu04GnJbDazBJ2PzmY7nRl"
           Model_Name: "accounts/fireworks/models/llama-v2-70b-chat"
           SessionTableName: !Ref SessionTable
+          CDTableName: !Ref CharacterDefinition
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref SessionTable
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+        - DynamoDBCrudPolicy:
+            TableName: !Ref CharacterDefinition
         - Statement:
             - Effect: Allow
               Action:
@@ -789,6 +898,7 @@ Resources:
     DependsOn:
       - WebSocketAPI
       - SessionTable
+      - CharacterDefinition
     Properties:
       Action: lambda:InvokeFunction
       FunctionName: !Ref LangChainFireworksLlama270BChatFunction
@@ -822,15 +932,25 @@ Resources:
       CodeUri: langchain/fireworks/
       Layers:
         - !Ref LangChainCommonLayer
+        - !Ref CommonLayer
       Environment:
         Variables:
           API_Base: "https://api.fireworks.ai/inference/v1/chat/completions"
           API_Key: "WglavV6hm0RLeZohaDZcrEjGAedu04GnJbDazBJ2PzmY7nRl"
           Model_Name: "accounts/fireworks/models/chinese-llama-2-lora-7b"
           SessionTableName: !Ref SessionTable
+          CDTableName: !Ref CharacterDefinition
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref SessionTable
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+        - DynamoDBCrudPolicy:
+            TableName: !Ref CharacterDefinition
         - Statement:
             - Effect: Allow
               Action:
@@ -842,6 +962,7 @@ Resources:
     DependsOn:
       - WebSocketAPI
       - SessionTable
+      - CharacterDefinition
     Properties:
       Action: lambda:InvokeFunction
       FunctionName: !Ref LangChainFireworksChineseLlama2LoRA7BFunction
@@ -875,15 +996,25 @@ Resources:
       CodeUri: langchain/fireworks/
       Layers:
         - !Ref LangChainCommonLayer
+        - !Ref CommonLayer
       Environment:
         Variables:
           API_Base: "https://api.fireworks.ai/inference/v1/chat/completions"
           API_Key: "WglavV6hm0RLeZohaDZcrEjGAedu04GnJbDazBJ2PzmY7nRl"
           Model_Name: "accounts/fireworks/models/firefunction-v1"
           SessionTableName: !Ref SessionTable
+          CDTableName: !Ref CharacterDefinition
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref SessionTable
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+        - DynamoDBCrudPolicy:
+            TableName: !Ref CharacterDefinition
         - Statement:
             - Effect: Allow
               Action:
@@ -895,6 +1026,7 @@ Resources:
     DependsOn:
       - WebSocketAPI
       - SessionTable
+      - CharacterDefinition
     Properties:
       Action: lambda:InvokeFunction
       FunctionName: !Ref LangChainFireworksFireFunctionV1Function
@@ -928,15 +1060,25 @@ Resources:
       CodeUri: langchain/fireworks/
       Layers:
         - !Ref LangChainCommonLayer
+        - !Ref CommonLayer
       Environment:
         Variables:
           API_Base: "https://api.fireworks.ai/inference/v1/chat/completions"
           API_Key: "WglavV6hm0RLeZohaDZcrEjGAedu04GnJbDazBJ2PzmY7nRl"
           Model_Name: "accounts/fireworks/models/dbrx-instruct"
           SessionTableName: !Ref SessionTable
+          CDTableName: !Ref CharacterDefinition
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref SessionTable
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+        - DynamoDBCrudPolicy:
+            TableName: !Ref CharacterDefinition
         - Statement:
             - Effect: Allow
               Action:
@@ -948,6 +1090,7 @@ Resources:
     DependsOn:
       - WebSocketAPI
       - SessionTable
+      - CharacterDefinition
     Properties:
       Action: lambda:InvokeFunction
       FunctionName: !Ref LangChainFireworksDBRXInstructFunction
@@ -981,15 +1124,25 @@ Resources:
       CodeUri: langchain/fireworks/
       Layers:
         - !Ref LangChainCommonLayer
+        - !Ref CommonLayer
       Environment:
         Variables:
           API_Base: "https://api.fireworks.ai/inference/v1/chat/completions"
           API_Key: "WglavV6hm0RLeZohaDZcrEjGAedu04GnJbDazBJ2PzmY7nRl"
           Model_Name: "accounts/fireworks/models/llama-2-13b-fp16-french"
           SessionTableName: !Ref SessionTable
+          CDTableName: !Ref CharacterDefinition
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref SessionTable
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+        - DynamoDBCrudPolicy:
+            TableName: !Ref CharacterDefinition
         - Statement:
             - Effect: Allow
               Action:
@@ -1001,6 +1154,7 @@ Resources:
     DependsOn:
       - WebSocketAPI
       - SessionTable
+      - CharacterDefinition
     Properties:
       Action: lambda:InvokeFunction
       FunctionName: !Ref LangChainFireworksLlama213BFrenchFunction
@@ -1034,15 +1188,25 @@ Resources:
       CodeUri: langchain/fireworks/
       Layers:
         - !Ref LangChainCommonLayer
+        - !Ref CommonLayer
       Environment:
         Variables:
           API_Base: "https://api.fireworks.ai/inference/v1/chat/completions"
           API_Key: "WglavV6hm0RLeZohaDZcrEjGAedu04GnJbDazBJ2PzmY7nRl"
           Model_Name: "accounts/fireworks/models/yi-34b-chat"
           SessionTableName: !Ref SessionTable
+          CDTableName: !Ref CharacterDefinition
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref SessionTable
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+        - DynamoDBCrudPolicy:
+            TableName: !Ref CharacterDefinition
         - Statement:
             - Effect: Allow
               Action:
@@ -1054,6 +1218,7 @@ Resources:
     DependsOn:
       - WebSocketAPI
       - SessionTable
+      - CharacterDefinition
     Properties:
       Action: lambda:InvokeFunction
       FunctionName: !Ref LangChainFireworksYi34BChatFunction
@@ -1087,15 +1252,25 @@ Resources:
       CodeUri: langchain/fireworks/
       Layers:
         - !Ref LangChainCommonLayer
+        - !Ref CommonLayer
       Environment:
         Variables:
           API_Base: "https://api.fireworks.ai/inference/v1/chat/completions"
           API_Key: "WglavV6hm0RLeZohaDZcrEjGAedu04GnJbDazBJ2PzmY7nRl"
           Model_Name: "accounts/fireworks/models/nous-hermes-2-mixtral-8x7b-dpo-fp8"
           SessionTableName: !Ref SessionTable
+          CDTableName: !Ref CharacterDefinition
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref SessionTable
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+        - DynamoDBCrudPolicy:
+            TableName: !Ref CharacterDefinition
         - Statement:
             - Effect: Allow
               Action:
@@ -1107,6 +1282,7 @@ Resources:
     DependsOn:
       - WebSocketAPI
       - SessionTable
+      - CharacterDefinition
     Properties:
       Action: lambda:InvokeFunction
       FunctionName: !Ref LangChainFireworksNousHermes2Mixtral8x7BFunction
@@ -1140,15 +1316,25 @@ Resources:
       CodeUri: langchain/fireworks/
       Layers:
         - !Ref LangChainCommonLayer
+        - !Ref CommonLayer
       Environment:
         Variables:
           API_Base: "https://api.fireworks.ai/inference/v1/chat/completions"
           API_Key: "WglavV6hm0RLeZohaDZcrEjGAedu04GnJbDazBJ2PzmY7nRl"
           Model_Name: "accounts/fireworks/models/qwen-14b-chat"
           SessionTableName: !Ref SessionTable
+          CDTableName: !Ref CharacterDefinition
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref SessionTable
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+        - DynamoDBCrudPolicy:
+            TableName: !Ref CharacterDefinition
         - Statement:
             - Effect: Allow
               Action:
@@ -1160,6 +1346,7 @@ Resources:
     DependsOn:
       - WebSocketAPI
       - SessionTable
+      - CharacterDefinition
     Properties:
       Action: lambda:InvokeFunction
       FunctionName: !Ref LangChainFireworksQwen14BChatFunction
@@ -1194,15 +1381,25 @@ Resources:
       CodeUri: langchain/fireworks/
       Layers:
         - !Ref LangChainCommonLayer
+        - !Ref CommonLayer
       Environment:
         Variables:
           API_Base: "https://api.fireworks.ai/inference/v1/chat/completions"
           API_Key: "WglavV6hm0RLeZohaDZcrEjGAedu04GnJbDazBJ2PzmY7nRl"
           Model_Name: "accounts/fireworks/models/mistral-7b-instruct-4k"
           SessionTableName: !Ref SessionTable
+          CDTableName: !Ref CharacterDefinition
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref SessionTable
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+        - DynamoDBCrudPolicy:
+            TableName: !Ref CharacterDefinition
         - Statement:
             - Effect: Allow
               Action:
@@ -1214,6 +1411,7 @@ Resources:
     DependsOn:
       - WebSocketAPI
       - SessionTable
+      - CharacterDefinition
     Properties:
       Action: lambda:InvokeFunction
       FunctionName: !Ref LangChainFireworksMistral7BInstructFunction
