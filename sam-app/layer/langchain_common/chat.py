@@ -72,20 +72,17 @@ def chat(
     # body = json.loads(event["body"],strict=False)
 
     db_connect_id = body.get("connection_id")
-    greeting = body.get("greeting")
-    userInfo = body.get("userInfo")
-    sysStr = body.get("system").strip()
-    systemInfo = decode_base64_to_string(sysStr)
     inputInfo = body.get("input")
     cdId = body.get("cdId")# CharacterDefinationId
+    nickname = body.get("nickname")
 
-    # if sysStr is not None and sysStr != "":
-    #     systemInfo = decode_base64_to_string(sysStr)
-    # else
-    #     systemInfo = ""
+
+    # greeting = body.get("greeting")
+    # userInfo = body.get("userInfo")
+    # sysStr = body.get("system").strip()
+    # systemInfo = decode_base64_to_string(sysStr)
     
 
-    print("systemInfo:"+systemInfo)
 
     # set callback handler
     # so that every time the model generates a chunk of response,
@@ -112,14 +109,32 @@ def chat(
 
     # setting defination
     if cdId:
-        char_def = get_character_definition(boto3_session, cd_table_name, cdId)
-        if char_def:
-            print(char_def)
+        cd = get_character_definition(boto3_session, cd_table_name, cdId)
+        if cd:
+            # gen system info
+            # Replace the placeholder
+            replacements = {
+                "{{char}}": cd.cname,
+                "{{user}}": nickname
+            }
+            personality = cd.personality
+            # replace personality
+            for placeholder, value in replacements.items():
+                personality = personality.replace(placeholder, value)
+                print("personality:"+personality)
+            # replace scenario
+            scenario = cd.scenario
+            for placeholder, value in replacements.items():
+                scenario = scenario.replace(placeholder, value)
+                print("scenario:"+scenario)
+
+            systemInfo = "["+cd.cname+"'s profile: "+cd.gender+"],["+cd.cname+"'s persona: "+personality+"],[scenario: "+scenario+"]"
+            print(systemInfo)
 
     prompt_template = ChatPromptTemplate.from_messages([
         SystemMessagePromptTemplate.from_template(systemInfo),
-        HumanMessage(content=userInfo,example=True),
-        AIMessage(content=greeting,example=True),
+        # HumanMessage(content=userInfo,example=True),
+        # AIMessage(content=greeting,example=True),
 
         MessagesPlaceholder(variable_name="history"),
         HumanMessagePromptTemplate.from_template(inputInfo)
