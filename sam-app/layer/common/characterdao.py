@@ -8,12 +8,16 @@ from boto3 import Session
 # CharacterDefinition对象
 class CharacterDefinition:
     def __init__(self, id: str, greeting: Optional[str] = None
-        , personality: Optional[str] = None, scenario: Optional[str] = None, example: Optional[str] = None):
+        , personality: Optional[str] = None, scenario: Optional[str] = None, example: Optional[str] = None
+        , cname: Optional[str] = None, gender: Optional[str] = None):
         self.id = id
         self.greeting = greeting
         self.personality = personality
         self.scenario = scenario
         self.example = example
+        self.cname = cname
+        self.gender = gender
+
 
     def to_dict(self):
         item_dict = {
@@ -27,6 +31,10 @@ class CharacterDefinition:
             item_dict['scenario'] = self.scenario
         if self.example:
             item_dict['example'] = self.example
+        if self.cname:
+            item_dict['cname'] = self.cname
+        if self.gender:
+            item_dict['gender'] = self.gender
         return item_dict
 
     def from_dict(self, item_dict: dict):
@@ -35,6 +43,8 @@ class CharacterDefinition:
         self.personality = item_dict.get('personality')
         self.scenario = item_dict.get('scenario')
         self.example = item_dict.get('example')
+        self.cname = item_dict.get('cname')
+        self.gender = item_dict.get('gender')
 
 
 # 保存数据到 DynamoDB
@@ -76,7 +86,9 @@ def get_character_definition(session: Session, table_name: str, id: str) -> Opti
                 greeting=item.get('greeting'),
                 personality=item.get('personality'),
                 scenario=item.get('scenario'),
-                example=item.get('example')
+                example=item.get('example'),
+                cname=item.get('cname'),
+                gender=item.get('gender')
             )
             return char_def
         else:

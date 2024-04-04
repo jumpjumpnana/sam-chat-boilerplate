@@ -17,8 +17,7 @@ session_table_name = os.environ["SessionTableName"]
 session = boto3.session.Session()
 def handler(event, context):
     bodyJson = event["body"]
-    bd = json.dumps(bodyJson)
-    body = json.loads(bd)
+    body = json.loads(bodyJson)
 
     print("body:"+str(body))
 
@@ -29,11 +28,14 @@ def handler(event, context):
     personality = body.get("personality")
     scenario = body.get("scenario")
     example = body.get("example")
+    cname = body.get("cname")
+    gender = body.get("gender")
     
     try:
         # 保存数据
         if modify == 0:
-            cd = CharacterDefinition(id=id, greeting=greeting, personality=personality, scenario=scenario, example=example)
+            cd = CharacterDefinition(id=id, greeting=greeting, personality=personality, 
+                scenario=scenario, example=example ,cname=cname,gender=gender)
             item = cd.to_dict()
             save_response = save_character_definition(session,session_table_name,item)
             print('Save response:', save_response)
@@ -55,18 +57,26 @@ def handler(event, context):
                 updated_values = {'example': example}  # 要更新的值
                 update_response = update_character_definition(session,session_table_name,id,'example', updated_values)
                 print('Update example response:', update_response)
+            if cname is not None:
+                updated_values = {'cname': cname}  # 要更新的值
+                update_response = update_character_definition(session,session_table_name,id,'cname', updated_values)
+                print('Update cname response:', update_response)
+            if gender is not None:
+                updated_values = {'gender': gender}  # 要更新的值
+                update_response = update_character_definition(session,session_table_name,id,'gender', updated_values)
+                print('Update gender response:', update_response)
         # 删除数据
         elif modify == 2:
             delete_response = delete_character_definition(session,session_table_name,id)
             print('Delete response:', delete_response)
         else:
-            return {"statusCode": 200, "body": "Invalid modify value. Must be 0 (save) or 1 (update) or 2 (delete)."}
+            return {"statusCode": 500, "body": "Invalid modify value. Must be 0 (save) or 1 (update) or 2 (delete)."}
 
     except Exception as e:
         print("Error:", e)
         error_message = "Exception: " + str(e)
-        return {"statusCode": 200, "body": error_message}
+        return {"statusCode": 500, "body": error_message}
 
-    return {"statusCode": 200, "body": "invalid route"}
+    return {"statusCode": 200, "body": "Success"}
 
 
