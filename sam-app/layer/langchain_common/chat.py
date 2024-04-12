@@ -117,17 +117,19 @@ def chat(
                 "{{char}}": cd.cname,
                 "{{user}}": nickname
             }
-            personality = cd.personality
             # replace personality
-            for placeholder, value in replacements.items():
-                personality = personality.replace(placeholder, value)
-                print("personality:"+personality)
+            personality = "" if cd.personality is None else cd.personality
+            if cd.personality != "":
+                for placeholder, value in replacements.items():
+                    personality = personality.replace(placeholder, value)
+                    # print("personality:"+personality)
             # replace scenario
-            scenario = cd.scenario
-            for placeholder, value in replacements.items():
-                scenario = scenario.replace(placeholder, value)
-                print("scenario:"+scenario)
-
+            scenario = "" if cd.scenario is None else cd.scenario
+            if cd.scenario != "":
+                for placeholder, value in replacements.items():
+                    scenario = scenario.replace(placeholder, value)
+                    # print("scenario:"+scenario)
+           
             systemInfo = "["+cd.cname+"'s profile: "+cd.gender+"],["+cd.cname+"'s persona: "+personality+"],[scenario: "+scenario+"]"
             print(systemInfo)
 

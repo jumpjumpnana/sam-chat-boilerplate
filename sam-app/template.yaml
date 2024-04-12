@@ -126,12 +126,28 @@ Resources:
       CodeUri: langchain/bedrock/
       Layers:
         - !Ref LangChainCommonLayer
+        - !Ref CommonLayer
       Environment:
         Variables:
           SessionTableName: !Ref SessionTable
+          CDTableName: !Ref CharacterDefinition
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref SessionTable
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+            - Effect: Allow
+              Action:
+                - "bedrock:InvokeModel"
+                - "bedrock:InvokeModelWithResponseStream"
+              Resource:
+                - "arn:aws:bedrock:*::foundation-model/*"
+        - DynamoDBCrudPolicy:
+            TableName: !Ref CharacterDefinition
         - Statement:
             - Effect: Allow
               Action:
@@ -149,6 +165,7 @@ Resources:
     DependsOn:
       - WebSocketAPI
       - SessionTable
+      - CharacterDefinition
     Properties:
       Action: lambda:InvokeFunction
       FunctionName: !Ref LangChainBedrockFunction
