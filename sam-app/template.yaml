@@ -54,6 +54,9 @@ Resources:
       - LangChainDeepinfraMixtral8x7BInstructv01Route
       - LangChainDeepinfraMistral7BInstructv01Route
       - LangChainDeepinfraGrypheMythonMaxL213bRoute
+      - LangChainDeepinfraDBRXInstructRoute
+      - LangChainDeepinfraZephyrOrpo141bA35bV01Route
+      - LangChainInfermaticMiquMaidV370BRoute
       - LangChainMistralMediumRoute
       - LangChainBedrockRoute
       - LangChainOpenAIRoute
@@ -276,6 +279,200 @@ Resources:
       FunctionName: !Ref LangChainMistralMediumFunction
       Principal: apigateway.amazonaws.com
 
+
+
+
+   # langchain/infermatic/MiquMaid-v3-70B
+  LangChainInfermaticMiquMaidV370BRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref WebSocketAPI
+      RouteKey: langchain/infermatic/MiquMaid-v3-70B
+      AuthorizationType: NONE
+      Target: !Join
+        - "/"
+        - - "integrations"
+          - !Ref LangChainInfermaticMiquMaidV370BIntegration
+  LangChainInfermaticMiquMaidV370BIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref WebSocketAPI
+      IntegrationType: AWS
+      IntegrationUri:
+        # see https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html
+        Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LangChainInfermaticMiquMaidV370BFunction.Arn}/invocations
+      RequestParameters: *AsyncLambdaIntegrationRequestParameters
+      RequestTemplates: *AsyncLambdaIntegrationRequestTemplates
+  LangChainInfermaticMiquMaidV370BFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: langchain/infermatic/
+      Layers:
+        - !Ref LangChainCommonLayer
+        - !Ref CommonLayer
+      Environment:
+        Variables:
+          OpenAI_Organization: "infermatic"
+          OpenAI_API_Base: "https://api.totalgpt.ai/v1"
+          OpenAI_API_Key: "sk-TpOemIuP3Wio2d3AeVeroA"
+          Model_Name: "MiquMaid-v3-70B"
+          SessionTableName: !Ref SessionTable
+          CDTableName: !Ref CharacterDefinition
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SessionTable
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+        - DynamoDBCrudPolicy:
+            TableName: !Ref CharacterDefinition
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+  LangChainInfermaticMiquMaidV370BPermission:
+    Type: AWS::Lambda::Permission
+    DependsOn:
+      - WebSocketAPI
+      - SessionTable
+      - CharacterDefinition
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref LangChainInfermaticMiquMaidV370BFunction
+      Principal: apigateway.amazonaws.com
+
+
+       # langchain/deepinfra/dbrx-instruct
+  LangChainDeepinfraDBRXInstructRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref WebSocketAPI
+      RouteKey: langchain/deepinfra/dbrx-instruct
+      AuthorizationType: NONE
+      Target: !Join
+        - "/"
+        - - "integrations"
+          - !Ref LangChainDeepinfraDBRXInstructIntegration
+  LangChainDeepinfraDBRXInstructIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref WebSocketAPI
+      IntegrationType: AWS
+      IntegrationUri:
+        # see https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html
+        Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LangChainDeepinfraDBRXInstructFunction.Arn}/invocations
+      RequestParameters: *AsyncLambdaIntegrationRequestParameters
+      RequestTemplates: *AsyncLambdaIntegrationRequestTemplates
+  LangChainDeepinfraDBRXInstructFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: langchain/deepinfra/
+      Layers:
+        - !Ref LangChainCommonLayer
+        - !Ref CommonLayer
+      Environment:
+        Variables:
+          API_Base: "https://api.deepinfra.com/v1/openai"
+          API_Key: "1iubpJyGRvVCwIcbwaamAro95AqWR9mE"
+          Model_Name: "databricks/dbrx-instruct"
+          SessionTableName: !Ref SessionTable
+          CDTableName: !Ref CharacterDefinition
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SessionTable
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+        - DynamoDBCrudPolicy:
+            TableName: !Ref CharacterDefinition
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+  LangChainDeepinfraDBRXInstructPermission:
+    Type: AWS::Lambda::Permission
+    DependsOn:
+      - WebSocketAPI
+      - SessionTable
+      - CharacterDefinition
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref LangChainDeepinfraDBRXInstructFunction
+      Principal: apigateway.amazonaws.com
+
+
+  # langchain/deepinfra/zephyr-orpo-141b-A35b-v0.1
+  LangChainDeepinfraZephyrOrpo141bA35bV01Route:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref WebSocketAPI
+      RouteKey: langchain/deepinfra/zephyr-orpo-141b-A35b-v0.1
+      AuthorizationType: NONE
+      Target: !Join
+        - "/"
+        - - "integrations"
+          - !Ref LangChainDeepinfraZephyrOrpo141bA35bV01Integration
+  LangChainDeepinfraZephyrOrpo141bA35bV01Integration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref WebSocketAPI
+      IntegrationType: AWS
+      IntegrationUri:
+        # see https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html
+        Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LangChainDeepinfraZephyrOrpo141bA35bV01Function.Arn}/invocations
+      RequestParameters: *AsyncLambdaIntegrationRequestParameters
+      RequestTemplates: *AsyncLambdaIntegrationRequestTemplates
+  LangChainDeepinfraZephyrOrpo141bA35bV01Function:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: langchain/deepinfra/
+      Layers:
+        - !Ref LangChainCommonLayer
+        - !Ref CommonLayer
+      Environment:
+        Variables:
+          API_Base: "https://api.deepinfra.com/v1/openai"
+          API_Key: "1iubpJyGRvVCwIcbwaamAro95AqWR9mE"
+          Model_Name: "HuggingFaceH4/zephyr-orpo-141b-A35b-v0.1"
+          SessionTableName: !Ref SessionTable
+          CDTableName: !Ref CharacterDefinition
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SessionTable
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+        - DynamoDBCrudPolicy:
+            TableName: !Ref CharacterDefinition
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+  LangChainDeepinfraZephyrOrpo141bA35bV01Permission:
+    Type: AWS::Lambda::Permission
+    DependsOn:
+      - WebSocketAPI
+      - SessionTable
+      - CharacterDefinition
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref LangChainDeepinfraZephyrOrpo141bA35bV01Function
+      Principal: apigateway.amazonaws.com
 
 
 

@@ -21,8 +21,7 @@ from langchain.prompts import (
 from langchain.llms.base import LLM
 from callback import StreamingAPIGatewayWebSocketCallbackHandler
 
-from langchain.llms import DeepInfra
-from langchain_community.chat_models import ChatDeepInfra
+
 from langchain_core.messages import HumanMessage, SystemMessage, AIMessage
 from langchain.schema import messages_to_dict
 
