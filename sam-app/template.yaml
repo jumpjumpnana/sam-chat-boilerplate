@@ -56,6 +56,8 @@ Resources:
       - LangChainDeepinfraGrypheMythonMaxL213bRoute
       - LangChainDeepinfraDBRXInstructRoute
       - LangChainDeepinfraZephyrOrpo141bA35bV01Route
+      - LangChainDeepinfraWizardLM27BRoute
+      - LangChainDeepinfraWizardLM2822BRoute
       - LangChainInfermaticMiquMaidV370BRoute
       - LangChainMistralMediumRoute
       - LangChainBedrockRoute
@@ -114,7 +116,7 @@ Resources:
       RequestTemplates:
         # see https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-websocket-api-mapping-template-reference.html
         &AsyncLambdaIntegrationRequestTemplates
-        application/json: |
+        application/json;charset=utf-8: |
           {
             "requestContext": {
               "domainName": "$context.domainName",
@@ -926,6 +928,8 @@ Resources:
       FunctionName: !Ref LangChainDeepinfraDolphin26mixtral8x7bFunction
       Principal: apigateway.amazonaws.com
 
+
+
       # langchain/deepinfra/pygmalion-13b-4bit-128g
   LangChainDeepinfraPygmalion13b4bit128gRoute:
     Type: AWS::ApiGatewayV2::Route
@@ -988,6 +992,143 @@ Resources:
       Action: lambda:InvokeFunction
       FunctionName: !Ref LangChainDeepinfraPygmalion13b4bit128gFunction
       Principal: apigateway.amazonaws.com
+
+
+
+
+   # langchain/deepinfra/WizardLM-2-7B
+  LangChainDeepinfraWizardLM27BRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref WebSocketAPI
+      RouteKey: langchain/deepinfra/WizardLM-2-7B
+      AuthorizationType: NONE
+      Target: !Join
+        - "/"
+        - - "integrations"
+          - !Ref LangChainDeepinfraWizardLM27BIntegration
+  LangChainDeepinfraWizardLM27BIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref WebSocketAPI
+      IntegrationType: AWS
+      IntegrationUri:
+        # see https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html
+        Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LangChainDeepinfraWizardLM27BFunction.Arn}/invocations
+      RequestParameters: *AsyncLambdaIntegrationRequestParameters
+      RequestTemplates: *AsyncLambdaIntegrationRequestTemplates
+  LangChainDeepinfraWizardLM27BFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: langchain/deepinfra/
+      Layers:
+        - !Ref LangChainCommonLayer
+        - !Ref CommonLayer
+      Environment:
+        Variables:
+          API_Base: "https://api.deepinfra.com/v1/openai"
+          API_Key: "1iubpJyGRvVCwIcbwaamAro95AqWR9mE"
+          Model_Name: "microsoft/WizardLM-2-7B"
+          SessionTableName: !Ref SessionTable
+          CDTableName: !Ref CharacterDefinition
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SessionTable
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+        - DynamoDBCrudPolicy:
+            TableName: !Ref CharacterDefinition
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+  LangChainDeepinfraWizardLM27BPermission:
+    Type: AWS::Lambda::Permission
+    DependsOn:
+      - WebSocketAPI
+      - SessionTable
+      - CharacterDefinition
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref LangChainDeepinfraWizardLM27BFunction
+      Principal: apigateway.amazonaws.com
+
+
+
+
+
+
+  # langchain/deepinfra/WizardLM-2-8x22B
+  LangChainDeepinfraWizardLM2822BRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref WebSocketAPI
+      RouteKey: langchain/deepinfra/WizardLM-2-8x22B
+      AuthorizationType: NONE
+      Target: !Join
+        - "/"
+        - - "integrations"
+          - !Ref LangChainDeepinfraWizardLM2822BIntegration
+  LangChainDeepinfraWizardLM2822BIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref WebSocketAPI
+      IntegrationType: AWS
+      IntegrationUri:
+        # see https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html
+        Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LangChainDeepinfraWizardLM2822BFunction.Arn}/invocations
+      RequestParameters: *AsyncLambdaIntegrationRequestParameters
+      RequestTemplates: *AsyncLambdaIntegrationRequestTemplates
+  LangChainDeepinfraWizardLM2822BFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: langchain/deepinfra/
+      Layers:
+        - !Ref LangChainCommonLayer
+        - !Ref CommonLayer
+      Environment:
+        Variables:
+          API_Base: "https://api.deepinfra.com/v1/openai"
+          API_Key: "1iubpJyGRvVCwIcbwaamAro95AqWR9mE"
+          Model_Name: "microsoft/WizardLM-2-8x22B"
+          SessionTableName: !Ref SessionTable
+          CDTableName: !Ref CharacterDefinition
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SessionTable
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+        - DynamoDBCrudPolicy:
+            TableName: !Ref CharacterDefinition
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+  LangChainDeepinfraWizardLM2822BPermission:
+    Type: AWS::Lambda::Permission
+    DependsOn:
+      - WebSocketAPI
+      - SessionTable
+      - CharacterDefinition
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref LangChainDeepinfraWizardLM2822BFunction
+      Principal: apigateway.amazonaws.com
+
+
+
 
 
        # langchain/fireworks/Mixtral-MoE-8x7B-Instruct

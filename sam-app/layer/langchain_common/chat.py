@@ -65,15 +65,15 @@ def chat(
     stage = event["requestContext"]["stage"]
     connection_id = event["requestContext"]["connectionId"]
     bodyJson = event["body"]
-    bd = json.dumps(bodyJson)
-    body = json.loads(bd,strict=False)
 
-    # body = json.loads(event["body"],strict=False)
+    dataBase = bodyJson.get("data")
+    dataStr = decode_base64_to_string(dataBase)
+    data = json.loads(dataStr)
 
-    db_connect_id = body.get("connection_id")
-    inputInfo = body.get("input")
-    cdId = body.get("cdId")# CharacterDefinationId
-    nickname = body.get("nickname")
+    db_connect_id = data.get("connection_id")
+    inputInfo = data.get("input")
+    cdId = data.get("cdId")# CharacterDefinationId
+    nickname = data.get("nickname")
 
 
     # greeting = body.get("greeting")
