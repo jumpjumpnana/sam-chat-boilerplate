@@ -62,7 +62,6 @@ Resources:
       - LangChainMistralMediumRoute
       - LangChainBedrockRoute
       - LangChainOpenAIRoute
-      - ModifyCharacterDefinitionRoute
       - BedrockRoute
       - OnConnectRoute
       - OnDefaultRoute
@@ -75,6 +74,27 @@ Resources:
       StageName: Production
       DeploymentId: !Ref WebSocketAPIDeployment
       ApiId: !Ref WebSocketAPI
+
+  ChatSetting:
+    Type: AWS::Serverless::SimpleTable
+    Properties:
+      PrimaryKey:
+        Name: uid
+        Type: String
+
+  UserMessages:
+    Type: AWS::Serverless::SimpleTable
+    Properties:
+      PrimaryKey:
+        Name: uid
+        Type: String
+
+  CharacterMessages:
+    Type: AWS::Serverless::SimpleTable
+    Properties:
+      PrimaryKey:
+        Name: cid
+        Type: String
 
   CharacterDefinition:
     Type: AWS::Serverless::SimpleTable
@@ -116,7 +136,7 @@ Resources:
       RequestTemplates:
         # see https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-websocket-api-mapping-template-reference.html
         &AsyncLambdaIntegrationRequestTemplates
-        application/json;charset=utf-8: |
+        application/json: |
           {
             "requestContext": {
               "domainName": "$context.domainName",
@@ -136,6 +156,9 @@ Resources:
         Variables:
           SessionTableName: !Ref SessionTable
           CDTableName: !Ref CharacterDefinition
+          CMTableName: !Ref CharacterMessages
+          UMTableName: !Ref UserMessages
+          ChatSettingTableName: !Ref ChatSetting
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref SessionTable
@@ -165,12 +188,57 @@ Resources:
                 - "bedrock:InvokeModelWithResponseStream"
               Resource:
                 - "arn:aws:bedrock:*::foundation-model/*"
+        - DynamoDBCrudPolicy:
+            TableName: !Ref CharacterMessages
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+            - Effect: Allow
+              Action:
+                - "bedrock:InvokeModel"
+                - "bedrock:InvokeModelWithResponseStream"
+              Resource:
+                - "arn:aws:bedrock:*::foundation-model/*"
+        - DynamoDBCrudPolicy:
+            TableName: !Ref UserMessages
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+            - Effect: Allow
+              Action:
+                - "bedrock:InvokeModel"
+                - "bedrock:InvokeModelWithResponseStream"
+              Resource:
+                - "arn:aws:bedrock:*::foundation-model/*"
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ChatSetting
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+            - Effect: Allow
+              Action:
+                - "bedrock:InvokeModel"
+                - "bedrock:InvokeModelWithResponseStream"
+              Resource:
+                - "arn:aws:bedrock:*::foundation-model/*"
   LangChainBedrockPermission:
     Type: AWS::Lambda::Permission
     DependsOn:
       - WebSocketAPI
       - SessionTable
       - CharacterDefinition
+      - CharacterMessages
+      - UserMessages
+      - ChatSetting
     Properties:
       Action: lambda:InvokeFunction
       FunctionName: !Ref LangChainBedrockFunction
@@ -320,6 +388,9 @@ Resources:
           Model_Name: "MiquMaid-v3-70B"
           SessionTableName: !Ref SessionTable
           CDTableName: !Ref CharacterDefinition
+          CMTableName: !Ref CharacterMessages
+          UMTableName: !Ref UserMessages
+          ChatSettingTableName: !Ref ChatSetting
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref SessionTable
@@ -337,12 +408,45 @@ Resources:
                 - "execute-api:ManageConnections"
               Resource:
                 - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+        - DynamoDBCrudPolicy:
+            TableName: !Ref CharacterMessages
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+        - DynamoDBCrudPolicy:
+            TableName: !Ref UserMessages
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ChatSetting
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+            - Effect: Allow
+              Action:
+                - "bedrock:InvokeModel"
+                - "bedrock:InvokeModelWithResponseStream"
+              Resource:
+                - "arn:aws:bedrock:*::foundation-model/*"
   LangChainInfermaticMiquMaidV370BPermission:
     Type: AWS::Lambda::Permission
     DependsOn:
       - WebSocketAPI
       - SessionTable
       - CharacterDefinition
+      - CharacterMessages
+      - UserMessages
+      - ChatSetting
     Properties:
       Action: lambda:InvokeFunction
       FunctionName: !Ref LangChainInfermaticMiquMaidV370BFunction
@@ -384,6 +488,9 @@ Resources:
           Model_Name: "databricks/dbrx-instruct"
           SessionTableName: !Ref SessionTable
           CDTableName: !Ref CharacterDefinition
+          CMTableName: !Ref CharacterMessages
+          UMTableName: !Ref UserMessages
+          ChatSettingTableName: !Ref ChatSetting
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref SessionTable
@@ -401,12 +508,45 @@ Resources:
                 - "execute-api:ManageConnections"
               Resource:
                 - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+        - DynamoDBCrudPolicy:
+            TableName: !Ref CharacterMessages
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+        - DynamoDBCrudPolicy:
+            TableName: !Ref UserMessages
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ChatSetting
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+            - Effect: Allow
+              Action:
+                - "bedrock:InvokeModel"
+                - "bedrock:InvokeModelWithResponseStream"
+              Resource:
+                - "arn:aws:bedrock:*::foundation-model/*"
   LangChainDeepinfraDBRXInstructPermission:
     Type: AWS::Lambda::Permission
     DependsOn:
       - WebSocketAPI
       - SessionTable
       - CharacterDefinition
+      - CharacterMessages
+      - UserMessages
+      - ChatSetting
     Properties:
       Action: lambda:InvokeFunction
       FunctionName: !Ref LangChainDeepinfraDBRXInstructFunction
@@ -448,6 +588,9 @@ Resources:
           Model_Name: "HuggingFaceH4/zephyr-orpo-141b-A35b-v0.1"
           SessionTableName: !Ref SessionTable
           CDTableName: !Ref CharacterDefinition
+          CMTableName: !Ref CharacterMessages
+          UMTableName: !Ref UserMessages
+          ChatSettingTableName: !Ref ChatSetting
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref SessionTable
@@ -465,12 +608,45 @@ Resources:
                 - "execute-api:ManageConnections"
               Resource:
                 - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+        - DynamoDBCrudPolicy:
+            TableName: !Ref CharacterMessages
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+        - DynamoDBCrudPolicy:
+            TableName: !Ref UserMessages
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ChatSetting
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+            - Effect: Allow
+              Action:
+                - "bedrock:InvokeModel"
+                - "bedrock:InvokeModelWithResponseStream"
+              Resource:
+                - "arn:aws:bedrock:*::foundation-model/*"
   LangChainDeepinfraZephyrOrpo141bA35bV01Permission:
     Type: AWS::Lambda::Permission
     DependsOn:
       - WebSocketAPI
       - SessionTable
       - CharacterDefinition
+      - CharacterMessages
+      - UserMessages
+      - ChatSetting
     Properties:
       Action: lambda:InvokeFunction
       FunctionName: !Ref LangChainDeepinfraZephyrOrpo141bA35bV01Function
@@ -513,6 +689,9 @@ Resources:
           Model_Name: "Gryphe/MythoMax-L2-13b"
           SessionTableName: !Ref SessionTable
           CDTableName: !Ref CharacterDefinition
+          CMTableName: !Ref CharacterMessages
+          UMTableName: !Ref UserMessages
+          ChatSettingTableName: !Ref ChatSetting
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref SessionTable
@@ -530,12 +709,45 @@ Resources:
                 - "execute-api:ManageConnections"
               Resource:
                 - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+        - DynamoDBCrudPolicy:
+            TableName: !Ref CharacterMessages
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+        - DynamoDBCrudPolicy:
+            TableName: !Ref UserMessages
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ChatSetting
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+            - Effect: Allow
+              Action:
+                - "bedrock:InvokeModel"
+                - "bedrock:InvokeModelWithResponseStream"
+              Resource:
+                - "arn:aws:bedrock:*::foundation-model/*"
   LangChainDeepinfraGrypheMythonMaxL213bPermission:
     Type: AWS::Lambda::Permission
     DependsOn:
       - WebSocketAPI
       - SessionTable
       - CharacterDefinition
+      - CharacterMessages
+      - UserMessages
+      - ChatSetting
     Properties:
       Action: lambda:InvokeFunction
       FunctionName: !Ref LangChainDeepinfraGrypheMythonMaxL213bFunction
@@ -577,6 +789,9 @@ Resources:
           Model_Name: "mistralai/Mistral-7B-Instruct-v0.1"
           SessionTableName: !Ref SessionTable
           CDTableName: !Ref CharacterDefinition
+          CMTableName: !Ref CharacterMessages
+          UMTableName: !Ref UserMessages
+          ChatSettingTableName: !Ref ChatSetting
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref SessionTable
@@ -594,12 +809,45 @@ Resources:
                 - "execute-api:ManageConnections"
               Resource:
                 - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+        - DynamoDBCrudPolicy:
+            TableName: !Ref CharacterMessages
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+        - DynamoDBCrudPolicy:
+            TableName: !Ref UserMessages
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ChatSetting
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+            - Effect: Allow
+              Action:
+                - "bedrock:InvokeModel"
+                - "bedrock:InvokeModelWithResponseStream"
+              Resource:
+                - "arn:aws:bedrock:*::foundation-model/*"
   LangChainDeepinfraMistral7BInstructv01Permission:
     Type: AWS::Lambda::Permission
     DependsOn:
       - WebSocketAPI
       - SessionTable
       - CharacterDefinition
+      - CharacterMessages
+      - UserMessages
+      - ChatSetting
     Properties:
       Action: lambda:InvokeFunction
       FunctionName: !Ref LangChainDeepinfraMistral7BInstructv01Function
@@ -642,6 +890,9 @@ Resources:
           Model_Name: "mistralai/Mixtral-8x7B-Instruct-v0.1"
           SessionTableName: !Ref SessionTable
           CDTableName: !Ref CharacterDefinition
+          CMTableName: !Ref CharacterMessages
+          UMTableName: !Ref UserMessages
+          ChatSettingTableName: !Ref ChatSetting
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref SessionTable
@@ -659,12 +910,45 @@ Resources:
                 - "execute-api:ManageConnections"
               Resource:
                 - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+        - DynamoDBCrudPolicy:
+            TableName: !Ref CharacterMessages
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+        - DynamoDBCrudPolicy:
+            TableName: !Ref UserMessages
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ChatSetting
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+            - Effect: Allow
+              Action:
+                - "bedrock:InvokeModel"
+                - "bedrock:InvokeModelWithResponseStream"
+              Resource:
+                - "arn:aws:bedrock:*::foundation-model/*"
   LangChainDeepinfraMixtral8x7BInstructv01Permission:
     Type: AWS::Lambda::Permission
     DependsOn:
       - WebSocketAPI
       - SessionTable
       - CharacterDefinition
+      - CharacterMessages
+      - UserMessages
+      - ChatSetting
     Properties:
       Action: lambda:InvokeFunction
       FunctionName: !Ref LangChainDeepinfraMixtral8x7BInstructv01Function
@@ -706,6 +990,9 @@ Resources:
           Model_Name: "jondurbin/airoboros-l2-70b-gpt4-1.4.1"
           SessionTableName: !Ref SessionTable
           CDTableName: !Ref CharacterDefinition
+          CMTableName: !Ref CharacterMessages
+          UMTableName: !Ref UserMessages
+          ChatSettingTableName: !Ref ChatSetting
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref SessionTable
@@ -723,12 +1010,45 @@ Resources:
                 - "execute-api:ManageConnections"
               Resource:
                 - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+        - DynamoDBCrudPolicy:
+            TableName: !Ref CharacterMessages
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+        - DynamoDBCrudPolicy:
+            TableName: !Ref UserMessages
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ChatSetting
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+            - Effect: Allow
+              Action:
+                - "bedrock:InvokeModel"
+                - "bedrock:InvokeModelWithResponseStream"
+              Resource:
+                - "arn:aws:bedrock:*::foundation-model/*"
   LangChainDeepinfraAiroborosl270bgpt4141Permission:
     Type: AWS::Lambda::Permission
     DependsOn:
       - WebSocketAPI
       - SessionTable
       - CharacterDefinition
+      - CharacterMessages
+      - UserMessages
+      - ChatSetting
     Properties:
       Action: lambda:InvokeFunction
       FunctionName: !Ref LangChainDeepinfraAiroborosl270bgpt4141Function
@@ -771,6 +1091,9 @@ Resources:
           Model_Name: "lizpreciatior/lzlv_70b_fp16_hf"
           SessionTableName: !Ref SessionTable
           CDTableName: !Ref CharacterDefinition
+          CMTableName: !Ref CharacterMessages
+          UMTableName: !Ref UserMessages
+          ChatSettingTableName: !Ref ChatSetting
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref SessionTable
@@ -788,12 +1111,45 @@ Resources:
                 - "execute-api:ManageConnections"
               Resource:
                 - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+        - DynamoDBCrudPolicy:
+            TableName: !Ref CharacterMessages
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+        - DynamoDBCrudPolicy:
+            TableName: !Ref UserMessages
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ChatSetting
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+            - Effect: Allow
+              Action:
+                - "bedrock:InvokeModel"
+                - "bedrock:InvokeModelWithResponseStream"
+              Resource:
+                - "arn:aws:bedrock:*::foundation-model/*"
   LangChainDeepinfraLzlv70bfp16hfPermission:
     Type: AWS::Lambda::Permission
     DependsOn:
       - WebSocketAPI
       - SessionTable
       - CharacterDefinition
+      - CharacterMessages
+      - UserMessages
+      - ChatSetting
     Properties:
       Action: lambda:InvokeFunction
       FunctionName: !Ref LangChainDeepinfraLzlv70bfp16hfFunction
@@ -836,6 +1192,9 @@ Resources:
           Model_Name: "deepinfra/airoboros-70b"
           SessionTableName: !Ref SessionTable
           CDTableName: !Ref CharacterDefinition
+          CMTableName: !Ref CharacterMessages
+          UMTableName: !Ref UserMessages
+          ChatSettingTableName: !Ref ChatSetting
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref SessionTable
@@ -853,12 +1212,45 @@ Resources:
                 - "execute-api:ManageConnections"
               Resource:
                 - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+        - DynamoDBCrudPolicy:
+            TableName: !Ref CharacterMessages
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+        - DynamoDBCrudPolicy:
+            TableName: !Ref UserMessages
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ChatSetting
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+            - Effect: Allow
+              Action:
+                - "bedrock:InvokeModel"
+                - "bedrock:InvokeModelWithResponseStream"
+              Resource:
+                - "arn:aws:bedrock:*::foundation-model/*"
   LangChainDeepinfraAiroboros70bPermission:
     Type: AWS::Lambda::Permission
     DependsOn:
       - WebSocketAPI
       - SessionTable
       - CharacterDefinition
+      - CharacterMessages
+      - UserMessages
+      - ChatSetting
     Properties:
       Action: lambda:InvokeFunction
       FunctionName: !Ref LangChainDeepinfraAiroboros70bFunction
@@ -900,6 +1292,9 @@ Resources:
           Model_Name: "cognitivecomputations/dolphin-2.6-mixtral-8x7b"
           SessionTableName: !Ref SessionTable
           CDTableName: !Ref CharacterDefinition
+          CMTableName: !Ref CharacterMessages
+          UMTableName: !Ref UserMessages
+          ChatSettingTableName: !Ref ChatSetting
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref SessionTable
@@ -917,12 +1312,45 @@ Resources:
                 - "execute-api:ManageConnections"
               Resource:
                 - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+        - DynamoDBCrudPolicy:
+            TableName: !Ref CharacterMessages
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+        - DynamoDBCrudPolicy:
+            TableName: !Ref UserMessages
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ChatSetting
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+            - Effect: Allow
+              Action:
+                - "bedrock:InvokeModel"
+                - "bedrock:InvokeModelWithResponseStream"
+              Resource:
+                - "arn:aws:bedrock:*::foundation-model/*"
   LangChainDeepinfraDolphin26mixtral8x7bPermission:
     Type: AWS::Lambda::Permission
     DependsOn:
       - WebSocketAPI
       - SessionTable
       - CharacterDefinition
+      - CharacterMessages
+      - UserMessages
+      - ChatSetting
     Properties:
       Action: lambda:InvokeFunction
       FunctionName: !Ref LangChainDeepinfraDolphin26mixtral8x7bFunction
@@ -965,6 +1393,9 @@ Resources:
           Model_Name: "DeepInfra/pygmalion-13b-4bit-128g"
           SessionTableName: !Ref SessionTable
           CDTableName: !Ref CharacterDefinition
+          CMTableName: !Ref CharacterMessages
+          UMTableName: !Ref UserMessages
+          ChatSettingTableName: !Ref ChatSetting
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref SessionTable
@@ -982,12 +1413,45 @@ Resources:
                 - "execute-api:ManageConnections"
               Resource:
                 - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+        - DynamoDBCrudPolicy:
+            TableName: !Ref CharacterMessages
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+        - DynamoDBCrudPolicy:
+            TableName: !Ref UserMessages
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ChatSetting
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+            - Effect: Allow
+              Action:
+                - "bedrock:InvokeModel"
+                - "bedrock:InvokeModelWithResponseStream"
+              Resource:
+                - "arn:aws:bedrock:*::foundation-model/*"
   LangChainDeepinfraPygmalion13b4bit128gPermission:
     Type: AWS::Lambda::Permission
     DependsOn:
       - WebSocketAPI
       - SessionTable
       - CharacterDefinition
+      - CharacterMessages
+      - UserMessages
+      - ChatSetting
     Properties:
       Action: lambda:InvokeFunction
       FunctionName: !Ref LangChainDeepinfraPygmalion13b4bit128gFunction
@@ -1031,6 +1495,9 @@ Resources:
           Model_Name: "microsoft/WizardLM-2-7B"
           SessionTableName: !Ref SessionTable
           CDTableName: !Ref CharacterDefinition
+          CMTableName: !Ref CharacterMessages
+          UMTableName: !Ref UserMessages
+          ChatSettingTableName: !Ref ChatSetting
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref SessionTable
@@ -1048,12 +1515,45 @@ Resources:
                 - "execute-api:ManageConnections"
               Resource:
                 - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+        - DynamoDBCrudPolicy:
+            TableName: !Ref CharacterMessages
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+        - DynamoDBCrudPolicy:
+            TableName: !Ref UserMessages
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ChatSetting
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+            - Effect: Allow
+              Action:
+                - "bedrock:InvokeModel"
+                - "bedrock:InvokeModelWithResponseStream"
+              Resource:
+                - "arn:aws:bedrock:*::foundation-model/*"
   LangChainDeepinfraWizardLM27BPermission:
     Type: AWS::Lambda::Permission
     DependsOn:
       - WebSocketAPI
       - SessionTable
       - CharacterDefinition
+      - CharacterMessages
+      - UserMessages
+      - ChatSetting
     Properties:
       Action: lambda:InvokeFunction
       FunctionName: !Ref LangChainDeepinfraWizardLM27BFunction
@@ -1099,6 +1599,9 @@ Resources:
           Model_Name: "microsoft/WizardLM-2-8x22B"
           SessionTableName: !Ref SessionTable
           CDTableName: !Ref CharacterDefinition
+          CMTableName: !Ref CharacterMessages
+          UMTableName: !Ref UserMessages
+          ChatSettingTableName: !Ref ChatSetting
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref SessionTable
@@ -1116,12 +1619,45 @@ Resources:
                 - "execute-api:ManageConnections"
               Resource:
                 - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+        - DynamoDBCrudPolicy:
+            TableName: !Ref CharacterMessages
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+        - DynamoDBCrudPolicy:
+            TableName: !Ref UserMessages
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ChatSetting
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+            - Effect: Allow
+              Action:
+                - "bedrock:InvokeModel"
+                - "bedrock:InvokeModelWithResponseStream"
+              Resource:
+                - "arn:aws:bedrock:*::foundation-model/*"
   LangChainDeepinfraWizardLM2822BPermission:
     Type: AWS::Lambda::Permission
     DependsOn:
       - WebSocketAPI
       - SessionTable
       - CharacterDefinition
+      - CharacterMessages
+      - UserMessages
+      - ChatSetting
     Properties:
       Action: lambda:InvokeFunction
       FunctionName: !Ref LangChainDeepinfraWizardLM2822BFunction
@@ -1166,6 +1702,9 @@ Resources:
           Model_Name: "accounts/fireworks/models/mixtral-8x7b-instruct"
           SessionTableName: !Ref SessionTable
           CDTableName: !Ref CharacterDefinition
+          CMTableName: !Ref CharacterMessages
+          UMTableName: !Ref UserMessages
+          ChatSettingTableName: !Ref ChatSetting
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref SessionTable
@@ -1183,12 +1722,45 @@ Resources:
                 - "execute-api:ManageConnections"
               Resource:
                 - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+        - DynamoDBCrudPolicy:
+            TableName: !Ref CharacterMessages
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+        - DynamoDBCrudPolicy:
+            TableName: !Ref UserMessages
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ChatSetting
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+            - Effect: Allow
+              Action:
+                - "bedrock:InvokeModel"
+                - "bedrock:InvokeModelWithResponseStream"
+              Resource:
+                - "arn:aws:bedrock:*::foundation-model/*"
   LangChainFireworksMixtralMoE8x7BInstructPermission:
     Type: AWS::Lambda::Permission
     DependsOn:
       - WebSocketAPI
       - SessionTable
       - CharacterDefinition
+      - CharacterMessages
+      - UserMessages
+      - ChatSetting
     Properties:
       Action: lambda:InvokeFunction
       FunctionName: !Ref LangChainFireworksMixtralMoE8x7BInstructFunction
@@ -1231,6 +1803,9 @@ Resources:
           Model_Name: "accounts/fireworks/models/llama-v2-70b-chat"
           SessionTableName: !Ref SessionTable
           CDTableName: !Ref CharacterDefinition
+          CMTableName: !Ref CharacterMessages
+          UMTableName: !Ref UserMessages
+          ChatSettingTableName: !Ref ChatSetting
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref SessionTable
@@ -1248,12 +1823,45 @@ Resources:
                 - "execute-api:ManageConnections"
               Resource:
                 - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+        - DynamoDBCrudPolicy:
+            TableName: !Ref CharacterMessages
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+        - DynamoDBCrudPolicy:
+            TableName: !Ref UserMessages
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ChatSetting
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+            - Effect: Allow
+              Action:
+                - "bedrock:InvokeModel"
+                - "bedrock:InvokeModelWithResponseStream"
+              Resource:
+                - "arn:aws:bedrock:*::foundation-model/*"
   LangChainFireworksLlama270BChatPermission:
     Type: AWS::Lambda::Permission
     DependsOn:
       - WebSocketAPI
       - SessionTable
       - CharacterDefinition
+      - CharacterMessages
+      - UserMessages
+      - ChatSetting
     Properties:
       Action: lambda:InvokeFunction
       FunctionName: !Ref LangChainFireworksLlama270BChatFunction
@@ -1295,6 +1903,9 @@ Resources:
           Model_Name: "accounts/fireworks/models/chinese-llama-2-lora-7b"
           SessionTableName: !Ref SessionTable
           CDTableName: !Ref CharacterDefinition
+          CMTableName: !Ref CharacterMessages
+          UMTableName: !Ref UserMessages
+          ChatSettingTableName: !Ref ChatSetting
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref SessionTable
@@ -1312,12 +1923,45 @@ Resources:
                 - "execute-api:ManageConnections"
               Resource:
                 - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+        - DynamoDBCrudPolicy:
+            TableName: !Ref CharacterMessages
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+        - DynamoDBCrudPolicy:
+            TableName: !Ref UserMessages
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ChatSetting
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+            - Effect: Allow
+              Action:
+                - "bedrock:InvokeModel"
+                - "bedrock:InvokeModelWithResponseStream"
+              Resource:
+                - "arn:aws:bedrock:*::foundation-model/*"
   LangChainFireworksChineseLlama2LoRA7BPermission:
     Type: AWS::Lambda::Permission
     DependsOn:
       - WebSocketAPI
       - SessionTable
       - CharacterDefinition
+      - CharacterMessages
+      - UserMessages
+      - ChatSetting
     Properties:
       Action: lambda:InvokeFunction
       FunctionName: !Ref LangChainFireworksChineseLlama2LoRA7BFunction
@@ -1359,6 +2003,9 @@ Resources:
           Model_Name: "accounts/fireworks/models/firefunction-v1"
           SessionTableName: !Ref SessionTable
           CDTableName: !Ref CharacterDefinition
+          CMTableName: !Ref CharacterMessages
+          UMTableName: !Ref UserMessages
+          ChatSettingTableName: !Ref ChatSetting
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref SessionTable
@@ -1376,12 +2023,45 @@ Resources:
                 - "execute-api:ManageConnections"
               Resource:
                 - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+        - DynamoDBCrudPolicy:
+            TableName: !Ref CharacterMessages
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+        - DynamoDBCrudPolicy:
+            TableName: !Ref UserMessages
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ChatSetting
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+            - Effect: Allow
+              Action:
+                - "bedrock:InvokeModel"
+                - "bedrock:InvokeModelWithResponseStream"
+              Resource:
+                - "arn:aws:bedrock:*::foundation-model/*"
   LangChainFireworksFireFunctionV1Permission:
     Type: AWS::Lambda::Permission
     DependsOn:
       - WebSocketAPI
       - SessionTable
       - CharacterDefinition
+      - CharacterMessages
+      - UserMessages
+      - ChatSetting
     Properties:
       Action: lambda:InvokeFunction
       FunctionName: !Ref LangChainFireworksFireFunctionV1Function
@@ -1423,6 +2103,9 @@ Resources:
           Model_Name: "accounts/fireworks/models/dbrx-instruct"
           SessionTableName: !Ref SessionTable
           CDTableName: !Ref CharacterDefinition
+          CMTableName: !Ref CharacterMessages
+          UMTableName: !Ref UserMessages
+          ChatSettingTableName: !Ref ChatSetting
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref SessionTable
@@ -1440,12 +2123,45 @@ Resources:
                 - "execute-api:ManageConnections"
               Resource:
                 - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+        - DynamoDBCrudPolicy:
+            TableName: !Ref CharacterMessages
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+        - DynamoDBCrudPolicy:
+            TableName: !Ref UserMessages
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ChatSetting
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+            - Effect: Allow
+              Action:
+                - "bedrock:InvokeModel"
+                - "bedrock:InvokeModelWithResponseStream"
+              Resource:
+                - "arn:aws:bedrock:*::foundation-model/*"
   LangChainFireworksDBRXInstructPermission:
     Type: AWS::Lambda::Permission
     DependsOn:
       - WebSocketAPI
       - SessionTable
       - CharacterDefinition
+      - CharacterMessages
+      - UserMessages
+      - ChatSetting
     Properties:
       Action: lambda:InvokeFunction
       FunctionName: !Ref LangChainFireworksDBRXInstructFunction
@@ -1487,6 +2203,9 @@ Resources:
           Model_Name: "accounts/fireworks/models/llama-2-13b-fp16-french"
           SessionTableName: !Ref SessionTable
           CDTableName: !Ref CharacterDefinition
+          CMTableName: !Ref CharacterMessages
+          UMTableName: !Ref UserMessages
+          ChatSettingTableName: !Ref ChatSetting
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref SessionTable
@@ -1504,12 +2223,45 @@ Resources:
                 - "execute-api:ManageConnections"
               Resource:
                 - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+        - DynamoDBCrudPolicy:
+            TableName: !Ref CharacterMessages
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+        - DynamoDBCrudPolicy:
+            TableName: !Ref UserMessages
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ChatSetting
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+            - Effect: Allow
+              Action:
+                - "bedrock:InvokeModel"
+                - "bedrock:InvokeModelWithResponseStream"
+              Resource:
+                - "arn:aws:bedrock:*::foundation-model/*"
   LangChainFireworksLlama213BFrenchPermission:
     Type: AWS::Lambda::Permission
     DependsOn:
       - WebSocketAPI
       - SessionTable
       - CharacterDefinition
+      - CharacterMessages
+      - UserMessages
+      - ChatSetting
     Properties:
       Action: lambda:InvokeFunction
       FunctionName: !Ref LangChainFireworksLlama213BFrenchFunction
@@ -1551,6 +2303,9 @@ Resources:
           Model_Name: "accounts/fireworks/models/yi-34b-chat"
           SessionTableName: !Ref SessionTable
           CDTableName: !Ref CharacterDefinition
+          CMTableName: !Ref CharacterMessages
+          UMTableName: !Ref UserMessages
+          ChatSettingTableName: !Ref ChatSetting
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref SessionTable
@@ -1568,12 +2323,45 @@ Resources:
                 - "execute-api:ManageConnections"
               Resource:
                 - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+        - DynamoDBCrudPolicy:
+            TableName: !Ref CharacterMessages
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+        - DynamoDBCrudPolicy:
+            TableName: !Ref UserMessages
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ChatSetting
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+            - Effect: Allow
+              Action:
+                - "bedrock:InvokeModel"
+                - "bedrock:InvokeModelWithResponseStream"
+              Resource:
+                - "arn:aws:bedrock:*::foundation-model/*"
   LangChainFireworksYi34BChatPermission:
     Type: AWS::Lambda::Permission
     DependsOn:
       - WebSocketAPI
       - SessionTable
       - CharacterDefinition
+      - CharacterMessages
+      - UserMessages
+      - ChatSetting
     Properties:
       Action: lambda:InvokeFunction
       FunctionName: !Ref LangChainFireworksYi34BChatFunction
@@ -1615,6 +2403,9 @@ Resources:
           Model_Name: "accounts/fireworks/models/nous-hermes-2-mixtral-8x7b-dpo-fp8"
           SessionTableName: !Ref SessionTable
           CDTableName: !Ref CharacterDefinition
+          CMTableName: !Ref CharacterMessages
+          UMTableName: !Ref UserMessages
+          ChatSettingTableName: !Ref ChatSetting
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref SessionTable
@@ -1632,12 +2423,45 @@ Resources:
                 - "execute-api:ManageConnections"
               Resource:
                 - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+        - DynamoDBCrudPolicy:
+            TableName: !Ref CharacterMessages
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+        - DynamoDBCrudPolicy:
+            TableName: !Ref UserMessages
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ChatSetting
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+            - Effect: Allow
+              Action:
+                - "bedrock:InvokeModel"
+                - "bedrock:InvokeModelWithResponseStream"
+              Resource:
+                - "arn:aws:bedrock:*::foundation-model/*"
   LangChainFireworksNousHermes2Mixtral8x7BPermission:
     Type: AWS::Lambda::Permission
     DependsOn:
       - WebSocketAPI
       - SessionTable
       - CharacterDefinition
+      - CharacterMessages
+      - UserMessages
+      - ChatSetting
     Properties:
       Action: lambda:InvokeFunction
       FunctionName: !Ref LangChainFireworksNousHermes2Mixtral8x7BFunction
@@ -1679,6 +2503,9 @@ Resources:
           Model_Name: "accounts/fireworks/models/qwen-14b-chat"
           SessionTableName: !Ref SessionTable
           CDTableName: !Ref CharacterDefinition
+          CMTableName: !Ref CharacterMessages
+          UMTableName: !Ref UserMessages
+          ChatSettingTableName: !Ref ChatSetting
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref SessionTable
@@ -1696,12 +2523,45 @@ Resources:
                 - "execute-api:ManageConnections"
               Resource:
                 - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+        - DynamoDBCrudPolicy:
+            TableName: !Ref CharacterMessages
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+        - DynamoDBCrudPolicy:
+            TableName: !Ref UserMessages
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ChatSetting
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+            - Effect: Allow
+              Action:
+                - "bedrock:InvokeModel"
+                - "bedrock:InvokeModelWithResponseStream"
+              Resource:
+                - "arn:aws:bedrock:*::foundation-model/*"
   LangChainFireworksQwen14BChatPermission:
     Type: AWS::Lambda::Permission
     DependsOn:
       - WebSocketAPI
       - SessionTable
       - CharacterDefinition
+      - CharacterMessages
+      - UserMessages
+      - ChatSetting
     Properties:
       Action: lambda:InvokeFunction
       FunctionName: !Ref LangChainFireworksQwen14BChatFunction
@@ -1744,6 +2604,9 @@ Resources:
           Model_Name: "accounts/fireworks/models/mistral-7b-instruct-4k"
           SessionTableName: !Ref SessionTable
           CDTableName: !Ref CharacterDefinition
+          CMTableName: !Ref CharacterMessages
+          UMTableName: !Ref UserMessages
+          ChatSettingTableName: !Ref ChatSetting
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref SessionTable
@@ -1761,12 +2624,45 @@ Resources:
                 - "execute-api:ManageConnections"
               Resource:
                 - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+        - DynamoDBCrudPolicy:
+            TableName: !Ref CharacterMessages
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+        - DynamoDBCrudPolicy:
+            TableName: !Ref UserMessages
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ChatSetting
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+            - Effect: Allow
+              Action:
+                - "bedrock:InvokeModel"
+                - "bedrock:InvokeModelWithResponseStream"
+              Resource:
+                - "arn:aws:bedrock:*::foundation-model/*"
   LangChainFireworksMistral7BInstructPermission:
     Type: AWS::Lambda::Permission
     DependsOn:
       - WebSocketAPI
       - SessionTable
       - CharacterDefinition
+      - CharacterMessages
+      - UserMessages
+      - ChatSetting
     Properties:
       Action: lambda:InvokeFunction
       FunctionName: !Ref LangChainFireworksMistral7BInstructFunction
@@ -1775,26 +2671,6 @@ Resources:
 
 
       # ModifyCharacterDefinitionRoute
-  ModifyCharacterDefinitionRoute:
-    Type: AWS::ApiGatewayV2::Route
-    Properties:
-      ApiId: !Ref WebSocketAPI
-      RouteKey: ModifyCharacterDefinition
-      AuthorizationType: NONE
-      Target: !Join
-        - "/"
-        - - "integrations"
-          - !Ref ModifyCharacterDefinitionIntegration
-  ModifyCharacterDefinitionIntegration:
-    Type: AWS::ApiGatewayV2::Integration
-    Properties:
-      ApiId: !Ref WebSocketAPI
-      IntegrationType: AWS
-      IntegrationUri:
-        # see https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html
-        Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ModifyCharacterDefinitionFunction.Arn}/invocations
-      RequestParameters: *AsyncLambdaIntegrationRequestParameters
-      RequestTemplates: *AsyncLambdaIntegrationRequestTemplates
   ModifyCharacterDefinitionFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -1821,6 +2697,37 @@ Resources:
     Properties:
       Action: lambda:InvokeFunction
       FunctionName: !Ref ModifyCharacterDefinitionFunction
+      Principal: apigateway.amazonaws.com
+
+  # SyncCharacterMessages
+  SyncCharacterMessagesFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: game/sync-messages/
+      Layers:
+        - !Ref LangChainCommonLayer
+        - !Ref CommonLayer
+      Environment:
+        Variables:
+          SessionTableName: !Ref CharacterMessages
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref CharacterMessages
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+  SyncCharacterMessagesPermission:
+    Type: AWS::Lambda::Permission
+    DependsOn:
+      - WebSocketAPI
+      - CharacterDefinition
+      - CharacterMessages
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref SyncCharacterMessagesFunction
       Principal: apigateway.amazonaws.com
 
 

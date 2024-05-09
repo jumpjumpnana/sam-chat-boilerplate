@@ -1,13 +1,11 @@
 import boto3
 from typing import Optional
 from boto3 import Session
-from botocore.exceptions import ClientError
 
 
 
 
-
-# CharacterDefinition对象 id:characterId
+# CharacterDefinition对象
 class CharacterDefinition:
     def __init__(self, id: str, greeting: Optional[str] = None
         , personality: Optional[str] = None, scenario: Optional[str] = None, example: Optional[str] = None

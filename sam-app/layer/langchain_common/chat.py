@@ -1,6 +1,7 @@
 
 import os
 import base64
+import requests
 
 import json
 from boto3 import Session
@@ -27,10 +28,26 @@ from langchain.schema import messages_to_dict
 
 from characterdao import (
     CharacterDefinition,
+    get_character_definition,
     save_character_definition,
     update_character_definition,
-    delete_character_definition,
-    get_character_definition
+    delete_character_definition
+)
+
+from CharacterMessagesDao import (
+    CharacterMessages,
+    save_character_messages,
+    update_character_messages,
+    delete_character_messages,
+    get_character_messages,
+    update_character_messages
+)
+from UserMessagesDao import (
+    UserMessages,
+    save_user_messages,
+    update_user_messages,
+    delete_user_messages,
+    get_user_messages
 )
 
 
@@ -55,10 +72,12 @@ def chat(
     boto3_session: Session,
     session_table_name: str,
     cd_table_name: str,
+    cm_table_name: str,
+    um_table_name: str,
     ai_prefix: str,
     prompt: PromptTemplate,
 ):
-    # print(json.dumps(event))
+    # print(event)
 
     # parse event
     domain = event["requestContext"]["domainName"]
@@ -72,15 +91,10 @@ def chat(
 
     db_connect_id = data.get("connection_id")
     inputInfo = data.get("input")
-    cdId = data.get("cdId")# CharacterDefinationId
+    characterId = data.get("cdId")# CharacterId
     nickname = data.get("nickname")
+    # token = data.get("token")
 
-
-    # greeting = body.get("greeting")
-    # userInfo = body.get("userInfo")
-    # sysStr = body.get("system").strip()
-    # systemInfo = decode_base64_to_string(sysStr)
-    
 
 
     # set callback handler
@@ -106,36 +120,39 @@ def chat(
         # boto3_session=boto3_session,
     )
 
+    systemInfo = ""
+    greeting = ""
     # setting defination
-    if cdId:
-        cd = get_character_definition(boto3_session, cd_table_name, cdId)
-        if cd:
-            # gen system info
-            # Replace the placeholder
-            replacements = {
-                "{{char}}": cd.cname,
-                "{{user}}": nickname
-            }
-            # replace personality
-            personality = "" if cd.personality is None else cd.personality
-            if cd.personality != "":
-                for placeholder, value in replacements.items():
-                    personality = personality.replace(placeholder, value)
-                    # print("personality:"+personality)
-            # replace scenario
-            scenario = "" if cd.scenario is None else cd.scenario
-            if cd.scenario != "":
-                for placeholder, value in replacements.items():
-                    scenario = scenario.replace(placeholder, value)
-                    # print("scenario:"+scenario)
-           
-            systemInfo = "["+cd.cname+"'s profile: "+cd.gender+"],["+cd.cname+"'s persona: "+personality+"],[scenario: "+scenario+"]"
-            print(systemInfo)
+    cd = get_character_definition(boto3_session, cd_table_name, characterId)
+    if cd:
+        # gen system info
+        # Replace the placeholder
+        replacements = {
+            "{{char}}": cd.cname,
+            "{{user}}": nickname
+        }
+        # replace personality
+        personality = "" if cd.personality is None else cd.personality
+        if cd.personality != "":
+            for placeholder, value in replacements.items():
+                personality = personality.replace(placeholder, value)
+                # print("personality:"+personality)
+        # replace scenario
+        scenario = "" if cd.scenario is None else cd.scenario
+        if cd.scenario != "":
+            for placeholder, value in replacements.items():
+                scenario = scenario.replace(placeholder, value)
+                # print("scenario:"+scenario)
+       
+        systemInfo = "["+cd.cname+"'s profile: "+cd.gender+"],["+cd.cname+"'s persona: "+personality+"],[scenario: "+scenario+"]"
+        print("systemInfo:"+systemInfo)
+        greeting = cd.greeting
+        print("greeting:"+greeting)
 
     prompt_template = ChatPromptTemplate.from_messages([
         SystemMessagePromptTemplate.from_template(systemInfo),
         # HumanMessage(content=userInfo,example=True),
-        # AIMessage(content=greeting,example=True),
+        AIMessage(content=greeting,example=True),
 
         MessagesPlaceholder(variable_name="history"),
         HumanMessagePromptTemplate.from_template(inputInfo)
@@ -147,51 +164,48 @@ def chat(
 
     a = conversation.predict(input=inputInfo)
     print("a:"+a)
-    # messages = history.messages
-    # print("history:", ', '.join(f"{message.type}: {message.content}" for message in messages))
 
 
 
+    # 对话量计数
+    cm = get_character_messages(boto3_session,cm_table_name,characterId)
+    print("cid:"+characterId+",cm:"+str(cm))
+    if cm: #更新
+        updated_values = {
+            'popular': 1,
+            'recent': 1,
+            'trending': 1,
+            'totalMessages': 1
+        }
+        update_character_messages(boto3_session, cm_table_name, characterId, updated_values)
+    else: #新建
+        cm = CharacterMessages(cid=characterId, popular=1, recent=1, trending=1, totalMessages=1)
+        item = cm.to_dict()
+        save_response = save_character_messages(boto3_session,cm_table_name,item)
+        print('Save cm response:', save_response)
+        
+
+    # # 同步消息
+    # # 定义请求的 URL
+    # url = 'http://47.251.23.202:8080/ucenter/endChat'
+
+    # json_data = {
+    #     'characterId': characterId
+    # }
+    # # 发送 GET 请求
+    # response = requests.post(url,json=json_data)
+
+    # # 检查响应状态码
+    # if response.status_code == 200:
+    #     # 打印响应内容
+    #     print(response.text)
+    # else:
+    #     # 打印错误信息
+    #     print('Error:', response.status_code)
+
+    
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-    # [SystemMessage(content='You are a professional translator that translate English to Chinese', additional_kwargs={}), HumanMessage(content='Did you eat in this morning', additional_kwargs={}, example=False)]
-
-
-
-
-    # try:
-    #         # messages = history.messages
-    #         messagesDef = [
-    #             ("system", "You are a helpful AI bot. Your name is Lalalala."),
-    #             ("user", "Hello, I am Bob"),
-    #             ("ai", "I'm Nana")
-    #         ]
-
-    #         messagesDef = messages_to_dict(messagesDef)
-    #         # print("messagesDict:", ', '.join(f"{message['type']}: {message['content']}" for message in messagesDict))
-
-    #         history.table.put_item(
-    #             Item={"SessionId": db_connect_id, "History": messagesDef}
-    #         )
-    #     except Exception as e:
-    #         print(e)
-
-     # prompt_template = PromptTemplate(input_variables=["history", "system"], template=body["input"]["system"])
-
-    # prompt_template = SystemMessagePromptTemplate.from_template(body["input"]["system"])
-    # prompt_template = PromptTemplate.from_template(body["input"]["human"]).partial(system=body["input"]["system"])
 
 
 
