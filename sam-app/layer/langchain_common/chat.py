@@ -172,14 +172,12 @@ def chat(
     print("cid:"+characterId+",cm:"+str(cm))
     if cm: #更新
         updated_values = {
-            'popular': 1,
-            'recent': 1,
-            'trending': 1,
-            'totalMessages': 1
+            'totalMessages': 1,
+            'updateFlag': 1
         }
         update_character_messages(boto3_session, cm_table_name, characterId, updated_values)
     else: #新建
-        cm = CharacterMessages(cid=characterId, popular=1, recent=1, trending=1, totalMessages=1)
+        cm = CharacterMessages(cid=characterId, totalMessages=1, updateFlag=1)
         item = cm.to_dict()
         save_response = save_character_messages(boto3_session,cm_table_name,item)
         print('Save cm response:', save_response)

@@ -21,7 +21,7 @@ from CharacterMessagesDao import (
     delete_character_messages,
     get_character_messages,
     update_character_messages,
-    get_all_character_messages
+    get_update_character_messages
 )
 
 
@@ -30,7 +30,7 @@ def handler(event, context):
    
     try:
         boto3_session = boto3.session.Session()
-        character_messages = get_all_character_messages(boto3_session, "CharacterMessages")
+        character_messages = get_update_character_messages(boto3_session, "CharacterMessages")
         if character_messages:
             json_list = []
             for char_message in character_messages:

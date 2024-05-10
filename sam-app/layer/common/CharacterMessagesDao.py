@@ -3,6 +3,7 @@ from typing import Optional
 from boto3 import Session
 from botocore.exceptions import ClientError
 from typing import List, Optional
+from boto3.dynamodb.conditions import Key, Attr
 
 
 
@@ -10,31 +11,25 @@ from typing import List, Optional
 
 # CharacterMessages对象 cid:characterId
 class CharacterMessages:
-    def __init__(self, cid: str, popular: int = 0, recent: int = 0, trending: int = 0, totalMessages: int = 0):
+    def __init__(self, cid: str, totalMessages: int = 0,updateFlag: int = 0):
         self.cid = cid
-        self.popular = popular
-        self.recent = recent
-        self.trending = trending
         self.totalMessages = totalMessages
+        self.updateFlag = updateFlag
 
 
     def to_dict(self):
         item_dict = {
             'cid': self.cid,
-            'popular': self.popular,
-            'recent': self.recent,
-            'trending': self.trending,
-            'totalMessages': self.totalMessages
+            'totalMessages': self.totalMessages,
+            'updateFlag': self.updateFlag
         }
            
         return item_dict
 
     def from_dict(self, item_dict: dict):
         self.cid = item_dict.get('cid')
-        self.popular = item_dict.get('popular',0)
-        self.recent = item_dict.get('recent',0)
-        self.trending = item_dict.get('trending',0)
         self.totalMessages = item_dict.get('totalMessages',0)
+        self.updateFlag = item_dict.get('updateFlag',0)
 
 
 # 保存数据到 DynamoDB
@@ -73,10 +68,8 @@ def get_character_messages(session: Session, table_name: str, cid: str) -> Optio
         if item:
             char_def = CharacterMessages(
                 cid=item['cid'],
-                popular = item.get('popular',0),
-                recent = item.get('recent',0),
-                trending = item.get('trending',0),
-                totalMessages = item.get('totalMessages',0)
+                totalMessages = item.get('totalMessages',0),
+                updateFlag = item.get('updateFlag',0)
             )
             return char_def
         else:
@@ -115,20 +108,19 @@ def update_character_messages(session: Session, table_name: str, cid: str, updat
         print("Error:", e)
         return None
 
-def get_all_character_messages(session: Session, table_name: str) -> Optional[List[CharacterMessages]]:
+def get_update_character_messages(session: Session, table_name: str) -> Optional[List[CharacterMessages]]:
     ddb = session.resource("dynamodb")
     table = ddb.Table(table_name)
     try:
-        response = table.scan()
+        response = table.query(
+            FilterExpression=Key('cid').gt(0) & Attr('updateFlag').gt(0)  # 过滤属性 updateFlag 大于 0 的记录
+        )
         items = response.get('Items', [])
         if items:
             char_defs = []
             for item in items:
                 char_def = CharacterMessages(
                     cid=item['cid'],
-                    popular=item.get('popular', 0),
-                    recent=item.get('recent', 0),
-                    trending=item.get('trending', 0),
                     totalMessages=item.get('totalMessages', 0)
                 )
                 char_defs.append(char_def)
