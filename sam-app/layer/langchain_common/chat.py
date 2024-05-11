@@ -37,16 +37,12 @@ from characterdao import (
 from CharacterMessagesDao import (
     CharacterMessages,
     save_character_messages,
-    update_character_messages,
-    delete_character_messages,
     get_character_messages,
     update_character_messages
 )
 from UserMessagesDao import (
     UserMessages,
     save_user_messages,
-    update_user_messages,
-    delete_user_messages,
     get_user_messages
 )
 
@@ -145,9 +141,9 @@ def chat(
                 # print("scenario:"+scenario)
        
         systemInfo = "["+cd.cname+"'s profile: "+cd.gender+"],["+cd.cname+"'s persona: "+personality+"],[scenario: "+scenario+"]"
-        print("systemInfo:"+systemInfo)
+        # print("systemInfo:"+systemInfo)
         greeting = cd.greeting
-        print("greeting:"+greeting)
+        # print("greeting:"+greeting)
 
     prompt_template = ChatPromptTemplate.from_messages([
         SystemMessagePromptTemplate.from_template(systemInfo),
@@ -163,25 +159,24 @@ def chat(
     conversation.prompt = prompt_template
 
     a = conversation.predict(input=inputInfo)
-    print("a:"+a)
+    # print("a:"+a)
 
 
 
     # 对话量计数
     cm = get_character_messages(boto3_session,cm_table_name,characterId)
-    print("cid:"+characterId+",cm:"+str(cm))
     if cm: #更新
-        updated_values = {
-            'totalMessages': 1,
-            'updateFlag': 1
-        }
-        update_character_messages(boto3_session, cm_table_name, characterId, updated_values)
+        update_character_messages(boto3_session, cm_table_name, characterId)
     else: #新建
-        cm = CharacterMessages(cid=characterId, totalMessages=1, updateFlag=1)
+        cm = CharacterMessages(cid=characterId, popular=1, recent=1, trending=1, totalMessages=1, updateFlag=1)
         item = cm.to_dict()
         save_response = save_character_messages(boto3_session,cm_table_name,item)
-        print('Save cm response:', save_response)
         
+
+
+
+
+
 
     # # 同步消息
     # # 定义请求的 URL

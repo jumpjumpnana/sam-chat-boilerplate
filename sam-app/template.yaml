@@ -95,6 +95,17 @@ Resources:
       PrimaryKey:
         Name: cid
         Type: String
+    GlobalSecondaryIndexes:
+      - IndexName: UpdateFlagIndex
+        KeySchema:
+          - AttributeName: updateFlag
+            KeyType: HASH  # 或者使用 RANGE 根据查询需求，HASH 用于唯一标识，RANGE 用于排序
+        Projection:
+          ProjectionType: ALL  # 或者使用 KEYS_ONLY / INCLUDE 根据实际需求定义投影类型
+        ProvisionedThroughput:
+          ReadCapacityUnits: 5   # 根据预期查询量设定读吞吐量
+          WriteCapacityUnits: 5  # 根据索引更新频率设定写吞吐量
+
 
   CharacterDefinition:
     Type: AWS::Serverless::SimpleTable
@@ -2709,7 +2720,7 @@ Resources:
         - !Ref CommonLayer
       Environment:
         Variables:
-          SessionTableName: !Ref CharacterMessages
+          CMTableName: !Ref CharacterMessages
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref CharacterMessages
