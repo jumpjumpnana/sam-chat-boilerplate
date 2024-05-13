@@ -2,6 +2,8 @@
 import os
 import base64
 import requests
+import time
+from datetime import datetime, timedelta
 
 import json
 from boto3 import Session
@@ -46,19 +48,10 @@ from UserMessagesDao import (
     get_user_messages
 )
 
-
-
-def decode_base64_to_string(encoded_string):
-    # 将编码后的字符串转换为字节
-    bytes_to_decode = encoded_string.encode('utf-8')
-
-    # 对字节进行Base64解码
-    decoded_bytes = base64.b64decode(bytes_to_decode)
-
-    # 将解码后的字节转换回字符串
-    decoded_string = decoded_bytes.decode('utf-8')
-
-    return decoded_string
+from common import (
+    get_date_time,
+    decode_base64_to_string
+)
 
 
 
@@ -164,14 +157,8 @@ def chat(
 
 
     # 对话量计数
-    cm = get_character_messages(boto3_session,cm_table_name,characterId)
-    if cm: #更新
-        update_character_messages(boto3_session, cm_table_name, characterId)
-    else: #新建
-        cm = CharacterMessages(cid=characterId, popular=1, recent=1, trending=1, totalMessages=1, updateFlag=1)
-        item = cm.to_dict()
-        save_response = save_character_messages(boto3_session,cm_table_name,item)
-        
+    update_character_messages(boto3_session, cm_table_name, characterId)
+   
 
 
 

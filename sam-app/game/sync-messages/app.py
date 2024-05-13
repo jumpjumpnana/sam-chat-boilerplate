@@ -37,7 +37,6 @@ def handler(event, context):
             json_list.append(char_message.to_dict())  
 
 
-
         # 将 JSON 列表转换为 JSON 字符串
         characterList = json.dumps(json_list)
         # 定义请求的 URL

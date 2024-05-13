@@ -55,30 +55,16 @@ def handler(event, context):
             print('Save response:', save_response)
         # 更新数据
         elif modify == 1:
-            if greeting is not None:
-                updated_values = {'greeting': greeting}  # 要更新的值
-                update_response = update_character_definition(session,session_table_name,id,'greeting', updated_values)
-                print('Update greeting response:', update_response)
-            if personality is not None:
-                updated_values = {'personality': personality}  # 要更新的值
-                update_response = update_character_definition(session,session_table_name,id,'personality', updated_values)
-                print('Update personality response:', update_response)
-            if scenario is not None:
-                updated_values = {'scenario': scenario}  # 要更新的值
-                update_response = update_character_definition(session,session_table_name,id,'scenario', updated_values)
-                print('Update scenario response:', update_response)
-            if example is not None:
-                updated_values = {'example': example}  # 要更新的值
-                update_response = update_character_definition(session,session_table_name,id,'example', updated_values)
-                print('Update example response:', update_response)
-            if cname is not None:
-                updated_values = {'cname': cname}  # 要更新的值
-                update_response = update_character_definition(session,session_table_name,id,'cname', updated_values)
-                print('Update cname response:', update_response)
-            if gender is not None:
-                updated_values = {'gender': gender}  # 要更新的值
-                update_response = update_character_definition(session,session_table_name,id,'gender', updated_values)
-                print('Update gender response:', update_response)
+            updated_values = {
+                'greeting': greeting,
+                'personality': personality,
+                'scenario': scenario,
+                'example': example,
+                'cname': cname,
+                'gender': gender
+
+            }
+            update_character_definition(session,session_table_name,id, updated_values)
         # 删除数据
         elif modify == 2:
             delete_response = delete_character_definition(session,session_table_name,id)

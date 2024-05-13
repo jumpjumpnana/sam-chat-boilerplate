@@ -57,16 +57,41 @@ def save_character_definition(session: Session,table_name: str,item):
     return response
 
 # 更新数据到 DynamoDB
-def update_character_definition(session: Session,table_name: str,id: str, name: str,updated_values: dict):
+def update_character_definition(session: Session,table_name: str,id: str,updated_values: dict):
     ddb = session.resource("dynamodb")
     table = ddb.Table(table_name)
+
+    # 过滤掉值为空的项
+    filtered_updated_values = {k: v for k, v in updated_values.items() if v is not None}
+    # 如果过滤后没有任何字段需要更新，直接返回不处理这种情况
+    if not filtered_updated_values:
+        print("No valid fields to update.")
+        return None  
+
+    # 构建更新表达式，设置多个属性
+    update_expression_parts = ["SET"]  # 初始化SET部分
+    expression_attribute_names = {}  # 初始化属性名映射
+    expression_attribute_values = {}  # 初始化属性值映射
+    
+    for key in filtered_updated_values.keys():
+        # 为每个字段添加到更新表达式、属性名映射和属性值映射
+        update_expression_parts.append(f"#{key} = :{key},")  # 使用#{key}动态引用属性名
+        expression_attribute_names[f"#{key}"] = key  # 映射属性名
+        expression_attribute_values[f":{key}"] = filtered_updated_values[key]  # 映射属性值
+
+    # 移除最后一个逗号并组合更新表达式
+    update_expression = ' '.join(update_expression_parts[:-1])  # 去掉最后一个逗号
+    
+    # 执行更新操作
     response = table.update_item(
-        Key={'id': id},  # 指定主键 id
-        UpdateExpression='SET #n = :val',  # 更新表达式，设置属性名为 #n 的值为 :val
-        ExpressionAttributeNames={'#n': name},  # 定义属性名映射
-        ExpressionAttributeValues={':val': updated_values[name]}  # 定义属性值映射
+        Key={'id': id},
+        UpdateExpression=update_expression,
+        ExpressionAttributeNames=expression_attribute_names,
+        ExpressionAttributeValues=expression_attribute_values
     )
     return response
+
+
 # 删除数据从 DynamoDB
 def delete_character_definition(session: Session,table_name: str,id: str):
     ddb = session.resource("dynamodb")
