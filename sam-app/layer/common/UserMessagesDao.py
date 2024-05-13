@@ -8,18 +8,16 @@ from botocore.exceptions import ClientError
 
 # UserMessages对象
 class UserMessages:
-    def __init__(self, uid: str, messages: int = 0, limitMessages: int = 0, version: int = 0):
+    def __init__(self, uid: str, messages: int = 0, limitMessages: int = 0):
         self.uid = uid
         self.messages = messages
         self.limitMessages = limitMessages
-        self.version = version
 
     def to_dict(self):
         item_dict = {
             'uid': self.uid,
             'messages': self.messages,
-            'limitMessages': self.limitMessages,
-            'version': self.version
+            'limitMessages': self.limitMessages
         }
        
         return item_dict
@@ -28,7 +26,6 @@ class UserMessages:
         self.uid = item_dict.get('uid')
         self.messages = item_dict.get('messages',0)
         self.limitMessages = item_dict.get('limitMessages',0)
-        self.version = item_dict.get('version',0)
 
 
 # 保存数据到 DynamoDB
@@ -49,8 +46,7 @@ def get_user_messages(session: Session, table_name: str, uid: str) -> Optional[U
             char_def = UserMessages(
                 uid=item['uid'],
                 messages=item.get('messages',0),
-                limitMessages=item.get('limitMessages',0),
-                version=item.get('version',0)
+                limitMessages=item.get('limitMessages',0)
             )
             return char_def
         else:

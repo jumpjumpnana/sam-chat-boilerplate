@@ -20,8 +20,7 @@ from CharacterMessagesDao import (
     save_character_messages,
     get_character_messages,
     update_character_messages,
-    get_updated_character_messages,
-    batch_update_updated_character_messages
+    get_updated_character_messages
 )
 
 cm_table_name = os.environ["CMTableName"]
@@ -52,8 +51,6 @@ def handler(event, context):
         if response.status_code == 200:
             # 打印响应内容
             print(response.text)
-            # 将updateFlag置成0
-            batch_update_updated_character_messages(boto3_session, cm_table_name,character_messages)
         else:
             # 打印错误信息
             print('Error:', response.status_code)

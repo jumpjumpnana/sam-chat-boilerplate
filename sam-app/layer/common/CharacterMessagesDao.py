@@ -11,7 +11,7 @@ from common import (
 )
 
 
-# CharacterMessages对象 cid:characterId_dateTime时间戳,updateFlag:dateTime时间戳_0/1
+# CharacterMessages对象 cid:characterId_dateTime时间戳,updateFlag:dateTime时间戳
 class CharacterMessages:
     def __init__(self, cid: str, totalMessages: int,updateFlag: str):
         self.cid = cid
@@ -74,20 +74,8 @@ def update_character_messages(session: Session, table_name: str, cid: str):
         
         # 检查查询结果是否存在
         if 'Item' in response:
-            # 获取并解析updateFlag，提取"_1"或"_0"
-            flag_value = response['Item']['updateFlag'].split('_')[-1]
-            
-            # 根据updateFlag的后缀判断是否执行更新
-            if flag_value != '1':
-                # updateFlag的后缀不是1，执行更新操作
-                print("updateFlag的后缀不是1，执行更新操作")
-                update_expression = "SET totalMessages = totalMessages + :increment, updateFlag = :newFlagValue"
-                expression_attribute_values = {":increment": 1, ":newFlagValue": f"{response['Item']['updateFlag'][:-2]}_1"}  # 保留日期时间戳，修改后缀为1
-            else:
-                # updateFlag的后缀是1，不执行额外的更新操作，但依然增加totalMessages
-                print("updateFlag的后缀是1，仅增加totalMessages")
-                update_expression = "SET totalMessages = totalMessages + :increment"
-                expression_attribute_values = {":increment": 1}
+            update_expression = "SET totalMessages = totalMessages + :increment"
+            expression_attribute_values = {":increment": 1}
 
             # 执行更新
             update_response = table.update_item(
@@ -102,7 +90,7 @@ def update_character_messages(session: Session, table_name: str, cid: str):
             new_record = {
                 'cid': cmId,
                 'totalMessages': 1,  # 新记录默认totalMessages为1
-                'updateFlag': f"{dateTime}_1"  # 初始化updateFlag
+                'updateFlag': dateTime  # 初始化updateFlag
             }
             new_response = table.put_item(Item=new_record)
             return new_response
@@ -119,7 +107,7 @@ def get_updated_character_messages(session: Session, table_name: str) -> Optiona
     # 使用全局二级索引进行查询
     try:
         dateTime = get_date_time()
-        updateFlag = f"{dateTime}_1"
+        updateFlag = dateTime
         response = table.query(
             IndexName='UpdateFlagIndex',  # 假设GSI的名称为'UpdateFlagIndex'
             KeyConditionExpression=Key('updateFlag').eq(updateFlag),  # 查询publicFlag等于1的记录
@@ -127,7 +115,8 @@ def get_updated_character_messages(session: Session, table_name: str) -> Optiona
         items = response.get('Items', [])
         if items:
             char_defs = [CharacterMessages(cid=item['cid'], 
-                totalMessages=item.get('totalMessages', 0)) for item in items]
+                totalMessages=item.get('totalMessages', 0),
+                updateFlag=item.get('updateFlag')) for item in items]
             return char_defs
         else:
             return []
@@ -135,28 +124,28 @@ def get_updated_character_messages(session: Session, table_name: str) -> Optiona
         print("Error:", e)
         return None
 
-def batch_update_updated_character_messages(session: Session, table_name: str, char_defs: List[CharacterMessages]) -> None:
-    """
-    批量更新查询到的CharacterMessages记录，将updateFlag设置为0。
-    :param session: AWS Session实例
-    :param table_name: DynamoDB表名
-    :param char_defs: 需要更新的CharacterMessages对象列表
-    """
-    ddb = session.resource("dynamodb")
-    table = ddb.Table(table_name)
-    with table.batch_writer() as batch:
-        for char_def in char_defs:
-            try:
-                date_part = char_def.updateFlag.split('_')[0]  # 提取日期时间戳部分
-                new_update_flag = f"{date_part}_0"  
-                batch.put_item(
-                    Item={
-                        'cid': char_def.cid,
-                        'totalMessages': char_def.totalMessages,
-                        'updateFlag': new_update_flag,  # 更新updateFlag为0
-                        # 如果有其他字段需要保持原样，可以从char_def中提取并放入Item中
-                    }
-                )
-            except ClientError as e:
-                print(f"Error updating item {char_def.cid}: {e}")
+# def batch_update_updated_character_messages(session: Session, table_name: str, char_defs: List[CharacterMessages]) -> None:
+#     """
+#     批量更新查询到的CharacterMessages记录，将updateFlag设置为0。
+#     :param session: AWS Session实例
+#     :param table_name: DynamoDB表名
+#     :param char_defs: 需要更新的CharacterMessages对象列表
+#     """
+#     ddb = session.resource("dynamodb")
+#     table = ddb.Table(table_name)
+#     with table.batch_writer() as batch:
+#         for char_def in char_defs:
+#             try:
+#                 date_part = char_def.updateFlag.split('_')[0]  # 提取日期时间戳部分
+#                 new_update_flag = f"{date_part}_0"  
+#                 batch.put_item(
+#                     Item={
+#                         'cid': char_def.cid,
+#                         'totalMessages': char_def.totalMessages,
+#                         'updateFlag': new_update_flag,  # 更新updateFlag为0
+#                         # 如果有其他字段需要保持原样，可以从char_def中提取并放入Item中
+#                     }
+#                 )
+#             except ClientError as e:
+#                 print(f"Error updating item {char_def.cid}: {e}")
 
