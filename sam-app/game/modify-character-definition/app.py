@@ -71,12 +71,14 @@ def handler(event, context):
             print('Delete response:', delete_response)
         else:
             return {"statusCode": 500, "body": "Invalid modify value. Must be 0 (save) or 1 (update) or 2 (delete)."}
+            
+        return {"statusCode": 200, "body": "Success"}
 
     except Exception as e:
         print("Error:", e)
         error_message = "Exception: " + str(e)
         return {"statusCode": 500, "body": error_message}
 
-    return {"statusCode": 200, "body": "Success"}
+    
 
 

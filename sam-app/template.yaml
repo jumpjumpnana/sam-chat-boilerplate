@@ -2714,7 +2714,7 @@ Resources:
   SyncCharacterMessagesFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: game/sync-messages/
+      CodeUri: game/sync-character-messages/
       Layers:
         - !Ref LangChainCommonLayer
         - !Ref CommonLayer
@@ -2739,6 +2739,66 @@ Resources:
     Properties:
       Action: lambda:InvokeFunction
       FunctionName: !Ref SyncCharacterMessagesFunction
+      Principal: apigateway.amazonaws.com
+
+  # GetUserMessages
+  GetUserMessagesFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: game/get-user-messages/
+      Layers:
+        - !Ref LangChainCommonLayer
+        - !Ref CommonLayer
+      Environment:
+        Variables:
+          UMTableName: !Ref UserMessages
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref UserMessages
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+  GetUserMessagesPermission:
+    Type: AWS::Lambda::Permission
+    DependsOn:
+      - WebSocketAPI
+      - UserMessages
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref GetUserMessagesFunction
+      Principal: apigateway.amazonaws.com
+
+  # ModifyUserMessages
+  ModifyUserMessagesFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: game/modify-user-messages/
+      Layers:
+        - !Ref LangChainCommonLayer
+        - !Ref CommonLayer
+      Environment:
+        Variables:
+          UMTableName: !Ref UserMessages
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref UserMessages
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+  ModifyUserMessagesPermission:
+    Type: AWS::Lambda::Permission
+    DependsOn:
+      - WebSocketAPI
+      - UserMessages
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref ModifyUserMessagesFunction
       Principal: apigateway.amazonaws.com
 
 

@@ -45,12 +45,14 @@ from CharacterMessagesDao import (
 from UserMessagesDao import (
     UserMessages,
     save_user_messages,
-    has_sufficient_messages
+    has_sufficient_messages,
+    deduct_user_messages
 )
 
 from common import (
     get_date_time,
-    decode_base64_to_string
+    decode_base64_to_string,
+    decode_token
 )
 
 
@@ -82,8 +84,10 @@ def chat(
     inputInfo = data.get("input")
     characterId = data.get("cdId")# CharacterId
     nickname = data.get("nickname")
-    # token = data.get("token")
-    uid = data.get("uid")
+    token = data.get("token")
+
+    uid = decode_token(token)
+    print("uid:"+uid)
 
 
     # set callback handler
@@ -103,15 +107,15 @@ def chat(
                 "error_code": error_code})
     )
 
-
-    # if not uid:
-    #     try:
-    #         raise ValueError("User identifier (uid) not found in the request.")
-    #     except Exception as e:
-    #         custom_message = "User identifier (uid) not found in the request."
-    #         error_code = -1
-    #         callback.on_llm_error(error=e, message=custom_message, error_code=error_code)
-    #     return
+    if not uid:
+        try:
+            raise ValueError("User identifier (uid) not found in the request.")
+        except Exception as e:
+            custom_message = "User identifier (uid) not found in the request."
+            error_code = -1
+            callback.on_llm_error(error=e, message=custom_message, error_code=error_code)
+        return
+    
 
     # 判断消息数是否足够扣除
     can_deduct = has_sufficient_messages(boto3_session, um_table_name,uid ,1)
@@ -182,34 +186,14 @@ def chat(
     a = conversation.predict(input=inputInfo)
     # print("a:"+a)
 
+    # 扣除点数
+    deduct_user_messages(boto3_session, um_table_name,uid ,1)
     # 对话量计数
     update_character_messages(boto3_session, cm_table_name, characterId)
    
 
 
 
-
-
-
-    # # 同步消息
-    # # 定义请求的 URL
-    # url = 'http://47.251.23.202:8080/ucenter/endChat'
-
-    # json_data = {
-    #     'characterId': characterId
-    # }
-    # # 发送 GET 请求
-    # response = requests.post(url,json=json_data)
-
-    # # 检查响应状态码
-    # if response.status_code == 200:
-    #     # 打印响应内容
-    #     print(response.text)
-    # else:
-    #     # 打印错误信息
-    #     print('Error:', response.status_code)
-
-    
 
 
 

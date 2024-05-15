@@ -42,7 +42,25 @@ def decode_base64_to_string(encoded_string):
 
 
 
+def decode_token(token):
+    try:
+        if token is None or token == "":
+            print("Decoded token: token is null")
+            return None
+        # 对编码的字符串进行解码
+        decoded_bytes = base64.b64decode(token)
+        
+        # 从字节数据中构建原始字符串
+        original_string = decoded_bytes.decode('utf-8')
+        
+        print("Decoded token:", original_string)
 
+        strings = original_string.split("_")
+        uid = strings[0]
+        return str(uid)
+    except ValueError:
+        print("Error converting uid to integer:", ValueError)
+        return None
 
 
 
