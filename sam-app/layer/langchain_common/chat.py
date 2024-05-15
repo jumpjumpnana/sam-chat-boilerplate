@@ -45,7 +45,7 @@ from CharacterMessagesDao import (
 from UserMessagesDao import (
     UserMessages,
     save_user_messages,
-    get_user_messages
+    has_sufficient_messages
 )
 
 from common import (
@@ -83,7 +83,7 @@ def chat(
     characterId = data.get("cdId")# CharacterId
     nickname = data.get("nickname")
     # token = data.get("token")
-
+    uid = data.get("uid")
 
 
     # set callback handler
@@ -96,10 +96,37 @@ def chat(
         connection_id,
         on_token=lambda t: json.dumps({"kind": "token", "chunk": t}),
         on_end=lambda: json.dumps({"kind": "end"}),
-        on_err=lambda e: json.dumps({"kind": "error"}),
+        # on_err=lambda e, message=None: json.dumps({"kind": "error", "message": message or str(e) or "An error occurred"}),
+        on_err=lambda e,message=None,error_code=None: json.dumps({
+                "kind": "error",
+                "message": message or str(e) or "An error occurred", 
+                "error_code": error_code})
     )
 
+
+    # if not uid:
+    #     try:
+    #         raise ValueError("User identifier (uid) not found in the request.")
+    #     except Exception as e:
+    #         custom_message = "User identifier (uid) not found in the request."
+    #         error_code = -1
+    #         callback.on_llm_error(error=e, message=custom_message, error_code=error_code)
+    #     return
+
+    # 判断消息数是否足够扣除
+    can_deduct = has_sufficient_messages(boto3_session, um_table_name,uid ,1)
+    if not can_deduct:
+        try:
+            raise ValueError("Insufficient messages. Please recharge to continue.")
+        except Exception as e:
+            custom_message = "Insufficient messages. Please recharge to continue."
+            error_code = -1
+            callback.on_llm_error(error=e, message=custom_message, error_code=error_code)
+        return
+
+
     llm.callbacks = [callback]
+
 
     history = DynamoDBChatMessageHistory(
         table_name=session_table_name,
@@ -150,11 +177,10 @@ def chat(
     memory = ConversationBufferMemory(chat_memory=history,return_messages=True)
     conversation = ConversationChain(llm=llm,memory=memory)
     conversation.prompt = prompt_template
+   
 
     a = conversation.predict(input=inputInfo)
     # print("a:"+a)
-
-
 
     # 对话量计数
     update_character_messages(boto3_session, cm_table_name, characterId)

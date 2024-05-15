@@ -2,6 +2,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Dict, List, Callable
 from boto3 import Session
 from langchain_core.callbacks.base import BaseCallbackHandler
+import json 
 
 if TYPE_CHECKING:
     from langchain_core.messages import BaseMessage
@@ -20,6 +21,7 @@ class StreamingAPIGatewayWebSocketCallbackHandler(BaseCallbackHandler):
         on_token: Callable[[str], str] | None = None,
         on_end: Callable[[], str] | None = None,
         on_err: Callable[[BaseException], str] | None = None,
+        # on_err: Optional[Callable[[BaseException, str, int], str]] = None,
     ):
         """
         Initialize callback handler
@@ -32,7 +34,11 @@ class StreamingAPIGatewayWebSocketCallbackHandler(BaseCallbackHandler):
         )
         self.on_token = on_token
         self.on_end = on_end
-        self.on_err = on_err
+        self.on_err = on_err or (lambda e, message=None, error_code=None: json.dumps({
+            "kind": "error",
+            "message": message or str(e) or "An error occurred",
+            "error_code": error_code or None  # 添加了对error_code为None的处理
+        })) 
         super().__init__()
 
     def on_llm_new_token(self, token: str, **kwargs: Any) -> None:

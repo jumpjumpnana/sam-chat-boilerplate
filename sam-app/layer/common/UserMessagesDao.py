@@ -36,24 +36,28 @@ def save_user_messages(session: Session,table_name: str,item):
     return response
 
 
-def get_user_messages(session: Session, table_name: str, uid: str) -> Optional[UserMessages]:
+def has_sufficient_messages(session: Session, table_name: str, uid: str, deduct_amount: int) -> bool:
+    """
+    判断用户是否有足够的消息数可以扣除，先检查limitMessages，再检查messages。
+    
+    参数:
+    deduct_amount -- 每次需要扣除的消息数量
+    
+    返回:
+    如果扣除后剩余消息数非负，则返回True，否则返回False。
+    """
     ddb = session.resource("dynamodb")
     table = ddb.Table(table_name)
     try:
         response = table.get_item(Key={'uid': uid})
         item = response.get('Item')
         if item:
-            char_def = UserMessages(
-                uid=item['uid'],
-                messages=item.get('messages',0),
-                limitMessages=item.get('limitMessages',0)
-            )
-            return char_def
-        else:
-            return None
-    except ClientError as e:
-        print("Error:", e)
-        return None
+            if (item.get('limitMessages', 0) + item.get('messages', 0)) >= deduct_amount:
+                return True
+    except Exception as e:
+        print(f"Error fetching data from DynamoDB: {e}")
+    
+    return False
 
 
 def update_user_messages(session: Session, table_name: str, uid: str, name: str, updated_values: dict):
