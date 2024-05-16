@@ -21,7 +21,6 @@ class StreamingAPIGatewayWebSocketCallbackHandler(BaseCallbackHandler):
         on_token: Callable[[str], str] | None = None,
         on_end: Callable[[], str] | None = None,
         on_err: Callable[[BaseException], str] | None = None,
-        # on_err: Optional[Callable[[BaseException, str, int], str]] = None,
     ):
         """
         Initialize callback handler
@@ -34,11 +33,7 @@ class StreamingAPIGatewayWebSocketCallbackHandler(BaseCallbackHandler):
         )
         self.on_token = on_token
         self.on_end = on_end
-        self.on_err = on_err or (lambda e, message=None, error_code=None: json.dumps({
-            "kind": "error",
-            "message": message or str(e) or "An error occurred",
-            "error_code": error_code or None  # 添加了对error_code为None的处理
-        })) 
+        self.on_err = on_err
         super().__init__()
 
     def on_llm_new_token(self, token: str, **kwargs: Any) -> None:
@@ -64,7 +59,9 @@ class StreamingAPIGatewayWebSocketCallbackHandler(BaseCallbackHandler):
         if self.on_err is not None:
             self.apigw.post_to_connection(
                 ConnectionId=self.connection_id,
-                Data=self.on_err(error),
+                Data=self.on_err(error, 
+                    kwargs.get('message', str(error) if str(error) else "An error occurred"),
+                    kwargs.get('error_code', -100)),
             )
 
     def on_chat_model_start(

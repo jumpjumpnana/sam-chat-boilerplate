@@ -87,7 +87,7 @@ def chat(
     token = data.get("token")
 
     uid = decode_token(token)
-    print("uid:"+uid)
+    print(f"uid:{uid or 'None'}")
 
 
     # set callback handler
@@ -100,11 +100,11 @@ def chat(
         connection_id,
         on_token=lambda t: json.dumps({"kind": "token", "chunk": t}),
         on_end=lambda: json.dumps({"kind": "end"}),
-        # on_err=lambda e, message=None: json.dumps({"kind": "error", "message": message or str(e) or "An error occurred"}),
         on_err=lambda e,message=None,error_code=None: json.dumps({
                 "kind": "error",
-                "message": message or str(e) or "An error occurred", 
-                "error_code": error_code})
+                "message": message, 
+                "error_code": error_code
+                })
     )
 
     if not uid:
