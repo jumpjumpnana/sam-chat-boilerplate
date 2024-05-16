@@ -124,7 +124,7 @@ def chat(
             raise ValueError("Insufficient messages. Please recharge to continue.")
         except Exception as e:
             custom_message = "Insufficient messages. Please recharge to continue."
-            error_code = -1
+            error_code = -2
             callback.on_llm_error(error=e, message=custom_message, error_code=error_code)
         return
 
