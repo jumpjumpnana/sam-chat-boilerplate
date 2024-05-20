@@ -107,26 +107,26 @@ def chat(
                 })
     )
 
-    if not uid:
-        try:
-            raise ValueError("User identifier (uid) not found in the request.")
-        except Exception as e:
-            custom_message = "User identifier (uid) not found in the request."
-            error_code = -1
-            callback.on_llm_error(error=e, message=custom_message, error_code=error_code)
-        return
+    # if not uid:
+    #     try:
+    #         raise ValueError("User identifier (uid) not found in the request.")
+    #     except Exception as e:
+    #         custom_message = "User identifier (uid) not found in the request."
+    #         error_code = -1
+    #         callback.on_llm_error(error=e, message=custom_message, error_code=error_code)
+    #     return
     
 
-    # 判断消息数是否足够扣除
-    can_deduct = has_sufficient_messages(boto3_session, um_table_name,uid ,1)
-    if not can_deduct:
-        try:
-            raise ValueError("Insufficient messages. Please recharge to continue.")
-        except Exception as e:
-            custom_message = "Insufficient messages. Please recharge to continue."
-            error_code = -2
-            callback.on_llm_error(error=e, message=custom_message, error_code=error_code)
-        return
+    # # 判断消息数是否足够扣除
+    # can_deduct = has_sufficient_messages(boto3_session, um_table_name,uid ,1)
+    # if not can_deduct:
+    #     try:
+    #         raise ValueError("Insufficient messages. Please recharge to continue.")
+    #     except Exception as e:
+    #         custom_message = "Insufficient messages. Please recharge to continue."
+    #         error_code = -2
+    #         callback.on_llm_error(error=e, message=custom_message, error_code=error_code)
+    #     return
 
 
     llm.callbacks = [callback]
@@ -165,9 +165,9 @@ def chat(
                 # print("scenario:"+scenario)
        
         systemInfo = "["+cd.cname+"'s profile: "+cd.gender+"],["+cd.cname+"'s persona: "+personality+"],[scenario: "+scenario+"]"
-        # print("systemInfo:"+systemInfo)
+        print("systemInfo:"+systemInfo)
         greeting = cd.greeting
-        # print("greeting:"+greeting)
+        print("greeting:"+greeting)
 
     prompt_template = ChatPromptTemplate.from_messages([
         SystemMessagePromptTemplate.from_template(systemInfo),
@@ -184,7 +184,7 @@ def chat(
    
 
     a = conversation.predict(input=inputInfo)
-    # print("a:"+a)
+    print("a:"+a)
 
     # 扣除点数
     deduct_user_messages(boto3_session, um_table_name,uid ,1)

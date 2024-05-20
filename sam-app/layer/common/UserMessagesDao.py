@@ -163,49 +163,44 @@ def deduct_user_messages(session: Session, table_name: str, uid: str, deduct_amo
     table = ddb.Table(table_name)
     total_deducted = 0  # 记录总共已扣除的消息数
 
-    # 先尝试从limitMessages中扣除
-    while deduct_amount > 0:
-        try:
-            # 获取当前的limitMessages值
-            response = table.get_item(Key={'uid': uid})
-            current_messages = response.get('Item', {}).get('messages', 0)
-            current_limit_messages = response.get('Item', {}).get('limitMessages', 0)
-            
-            # 检查总和是否足够扣除
-            total_available = current_messages + current_limit_messages
-            if total_available < deduct_amount:
-                print("消息总数不足以完成扣除")
-                return False            
-            # 计算本次能扣除的最大值，防止limitMessages变负
-            deduct_this_round = min(deduct_amount, current_limit_messages)
-            
-            # 尝试更新limitMessages
-            if deduct_this_round > 0:
-                response_update = table.update_item(
-                    Key={'uid': uid},
-                    UpdateExpression="SET limitMessages = limitMessages - :deduct_this_round",
-                    ConditionExpression="limitMessages >= :deduct_this_round",
-                    ExpressionAttributeValues={
-                        ":deduct_this_round": deduct_this_round
-                    },
-                    ReturnValues="UPDATED_NEW"
-                )
-                
-                # 更新成功则累加已扣除数量
-                total_deducted += deduct_this_round
-                deduct_amount -= deduct_this_round
-                
-        except ClientError as e:
-            print("Error during limitMessages deduction:", e)
-            return False
+    # 获取当前的limitMessages值
+    response = table.get_item(Key={'uid': uid})
+    current_messages = response.get('Item', {}).get('messages', 0)
+    current_limit_messages = response.get('Item', {}).get('limitMessages', 0)
 
-    # 如果还有剩余需要扣除，尝试从messages中扣除
-    if deduct_amount > 0:
-        try:
-            # 获取当前的messages值
-            response = table.get_item(Key={'uid': uid})
-            current_messages = response.get('Item', {}).get('messages', 0)
+    # 检查总和是否足够扣除
+    total_available = current_messages + current_limit_messages
+    if total_available < deduct_amount:
+        print("消息总数不足以完成扣除")
+        return False       
+
+    # 先尝试从limitMessages中扣除
+    try:
+        
+        # 计算本次能扣除的最大值，防止limitMessages变负
+        deduct_this_round = min(deduct_amount, current_limit_messages)
+        print(f"deduct_this_round:{deduct_this_round}")
+        
+        # 尝试更新limitMessages
+        if deduct_this_round > 0:
+            response_update = table.update_item(
+                Key={'uid': uid},
+                UpdateExpression="SET limitMessages = limitMessages - :deduct_this_round",
+                ConditionExpression="limitMessages >= :deduct_this_round",
+                ExpressionAttributeValues={
+                    ":deduct_this_round": deduct_this_round
+                },
+                ReturnValues="UPDATED_NEW"
+            )
             
+            # 更新成功则累加已扣除数量
+            total_deducted += deduct_this_round
+            deduct_amount -= deduct_this_round
+
+        print(f"deduct_amount:{deduct_amount}")
+        # 如果还有剩余需要扣除，尝试从messages中扣除
+        if deduct_amount > 0:
+                
             # 计算本次能扣除的最大值，防止messages变负
             deduct_this_round = min(deduct_amount, current_messages)
             
@@ -224,10 +219,10 @@ def deduct_user_messages(session: Session, table_name: str, uid: str, deduct_amo
                 # 更新成功则累加已扣除数量
                 total_deducted += deduct_this_round
                 deduct_amount -= deduct_this_round
-                
-        except ClientError as e:
-            print("Error during messages deduction:", e)
-            return False
+                    
+    except ClientError as e:
+        print("Error during limit messages or messages deduction:", e)
+        return False
 
     # 如果最终扣除量等于初始扣除需求，说明扣除成功且没有变为负数
     return total_deducted == deduct_amount

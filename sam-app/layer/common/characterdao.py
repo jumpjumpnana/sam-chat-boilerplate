@@ -79,9 +79,13 @@ def update_character_definition(session: Session,table_name: str,id: str,updated
         expression_attribute_names[f"#{key}"] = key  # 映射属性名
         expression_attribute_values[f":{key}"] = filtered_updated_values[key]  # 映射属性值
 
-    # 移除最后一个逗号并组合更新表达式
-    update_expression = ' '.join(update_expression_parts[:-1])  # 去掉最后一个逗号
-    
+    # 确保正确去除最后一个逗号
+    if update_expression_parts[-1].endswith(","):
+        update_expression_parts[-1] = update_expression_parts[-1][:-1]
+
+    # 组合更新表达式
+    update_expression = ' '.join(update_expression_parts)
+        
     # 执行更新操作
     response = table.update_item(
         Key={'id': id},
