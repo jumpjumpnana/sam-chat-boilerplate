@@ -85,9 +85,11 @@ def chat(
     characterId = data.get("cdId")# CharacterId
     nickname = data.get("nickname")
     token = data.get("token")
+    repeat = data.get("repeat",0)
 
     uid = decode_token(token)
     print(f"uid:{uid or 'None'}")
+    print(f"db_connect_id:{db_connect_id}")
 
 
     # set callback handler
@@ -180,6 +182,18 @@ def chat(
         greeting = "" if cd.greeting is None else cd.greeting
         print(f"greeting:{greeting}")
 
+    # prompt_template = ChatPromptTemplate.from_messages([])
+    # prompt_template.append(SystemMessagePromptTemplate.from_template(systemPro))
+    # prompt_template.append(SystemMessagePromptTemplate.from_template(systemPersonality))
+    # prompt_template.append(SystemMessagePromptTemplate.from_template(systemScenario))
+    # prompt_template.append(SystemMessagePromptTemplate.from_template(systemNSFW))
+    # # prompt_template.append(HumanMessage(content=userInfo,example=True))
+    # prompt_template.append(AIMessage(content=greeting,example=True))
+    # prompt_template.append(MessagesPlaceholder(variable_name="history"))
+    # if repeat != 1:
+    #     prompt_template.append(HumanMessagePromptTemplate.from_template(inputInfo))
+    # prompt_template.append(SystemMessagePromptTemplate.from_template(systemEnd))
+
     prompt_template = ChatPromptTemplate.from_messages([
         SystemMessagePromptTemplate.from_template(systemPro),
         SystemMessagePromptTemplate.from_template(systemPersonality),
@@ -197,6 +211,13 @@ def chat(
     conversation = ConversationChain(llm=llm,memory=memory)
     conversation.prompt = prompt_template
    
+    # Ensure 'history' is provided in the inputs
+    # input_variables = {
+    #     "input": inputInfo,
+    #     "history": memory.load_memory_variables({})["history"]
+    # }
+
+    # a = conversation.predict(**input_variables)
 
     a = conversation.predict(input=inputInfo)
     print("a:"+a)

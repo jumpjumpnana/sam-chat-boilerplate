@@ -2801,6 +2801,67 @@ Resources:
       FunctionName: !Ref ModifyUserMessagesFunction
       Principal: apigateway.amazonaws.com
 
+  # DeleteLogMessagesFromHistory
+  DeleteLogMessagesFromHistoryFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: game/delete-log-message-from-history/
+      Layers:
+        - !Ref LangChainCommonLayer
+        - !Ref CommonLayer
+      Environment:
+        Variables:
+          TableName: !Ref SessionTable
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SessionTable
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+  DeleteLogMessagesFromHistoryPermission:
+    Type: AWS::Lambda::Permission
+    DependsOn:
+      - WebSocketAPI
+      - SessionTable
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref DeleteLogMessagesFromHistoryFunction
+      Principal: apigateway.amazonaws.com
+
+
+  # CreateChatFromSaved
+  CreateChatFromSavedFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: game/create-chat-from-saved/
+      Layers:
+        - !Ref LangChainCommonLayer
+        - !Ref CommonLayer
+      Environment:
+        Variables:
+          TableName: !Ref SessionTable
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SessionTable
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+  CreateChatFromSavedPermission:
+    Type: AWS::Lambda::Permission
+    DependsOn:
+      - WebSocketAPI
+      - SessionTable
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref CreateChatFromSavedFunction
+      Principal: apigateway.amazonaws.com
+
 
   # bedrock
   BedrockRoute:
