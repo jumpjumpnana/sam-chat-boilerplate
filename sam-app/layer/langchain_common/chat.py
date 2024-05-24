@@ -182,44 +182,34 @@ def chat(
         greeting = "" if cd.greeting is None else cd.greeting
         print(f"greeting:{greeting}")
 
-    # prompt_template = ChatPromptTemplate.from_messages([])
-    # prompt_template.append(SystemMessagePromptTemplate.from_template(systemPro))
-    # prompt_template.append(SystemMessagePromptTemplate.from_template(systemPersonality))
-    # prompt_template.append(SystemMessagePromptTemplate.from_template(systemScenario))
-    # prompt_template.append(SystemMessagePromptTemplate.from_template(systemNSFW))
-    # # prompt_template.append(HumanMessage(content=userInfo,example=True))
-    # prompt_template.append(AIMessage(content=greeting,example=True))
-    # prompt_template.append(MessagesPlaceholder(variable_name="history"))
-    # if repeat != 1:
-    #     prompt_template.append(HumanMessagePromptTemplate.from_template(inputInfo))
-    # prompt_template.append(SystemMessagePromptTemplate.from_template(systemEnd))
 
-    prompt_template = ChatPromptTemplate.from_messages([
+
+    messages = [
         SystemMessagePromptTemplate.from_template(systemPro),
         SystemMessagePromptTemplate.from_template(systemPersonality),
         SystemMessagePromptTemplate.from_template(systemScenario),
         SystemMessagePromptTemplate.from_template(systemNSFW),
         # HumanMessage(content=userInfo,example=True),
         AIMessage(content=greeting,example=True),
+        MessagesPlaceholder(variable_name="history")
+    ]
+    if repeat != 1:
+        messages.append(HumanMessagePromptTemplate.from_template(inputInfo))
+    messages.append(SystemMessagePromptTemplate.from_template(systemEnd))
+    prompt_template = ChatPromptTemplate.from_messages(messages)
 
-        MessagesPlaceholder(variable_name="history"),
-        HumanMessagePromptTemplate.from_template(inputInfo),
-        SystemMessagePromptTemplate.from_template(systemEnd)
-    ])
-    # memory = ConversationBufferMemory(ai_prefix=ai_prefix,chat_memory=history,return_messages=True)
     memory = ConversationBufferMemory(chat_memory=history,return_messages=True)
     conversation = ConversationChain(llm=llm,memory=memory)
     conversation.prompt = prompt_template
-   
-    # Ensure 'history' is provided in the inputs
-    # input_variables = {
-    #     "input": inputInfo,
-    #     "history": memory.load_memory_variables({})["history"]
-    # }
 
-    # a = conversation.predict(**input_variables)
+    input_variables = {
+        "input": inputInfo,
+        "history": memory.load_memory_variables({}).get("history",[])
+    }
 
-    a = conversation.predict(input=inputInfo)
+    a = conversation.predict(**input_variables)
+
+    # a = conversation.predict(input=inputInfo)
     print("a:"+a)
 
     # 扣除点数
@@ -234,7 +224,18 @@ def chat(
 
 
 
+    # prompt_template = ChatPromptTemplate.from_messages([
+    #     SystemMessagePromptTemplate.from_template(systemPro),
+    #     SystemMessagePromptTemplate.from_template(systemPersonality),
+    #     SystemMessagePromptTemplate.from_template(systemScenario),
+    #     SystemMessagePromptTemplate.from_template(systemNSFW),
+    #     # HumanMessage(content=userInfo,example=True),
+    #     AIMessage(content=greeting,example=True),
 
+    #     MessagesPlaceholder(variable_name="history"),
+    #     HumanMessagePromptTemplate.from_template(inputInfo),
+    #     SystemMessagePromptTemplate.from_template(systemEnd)
+    # ])
 
 
 
