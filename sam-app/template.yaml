@@ -2687,6 +2687,7 @@ Resources:
     Properties:
       CodeUri: game/modify-character-definition/
       Layers:
+        - !Ref LangChainCommonLayer
         - !Ref CommonLayer
       Environment:
         Variables:
@@ -2860,6 +2861,37 @@ Resources:
     Properties:
       Action: lambda:InvokeFunction
       FunctionName: !Ref CreateChatFromSavedFunction
+      Principal: apigateway.amazonaws.com
+
+
+  # ModifyChatSetting
+  ModifyChatSettingFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: game/modify-chat-setting/
+      Layers:
+        - !Ref LangChainCommonLayer
+        - !Ref CommonLayer
+      Environment:
+        Variables:
+          TableName: !Ref ChatSetting
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ChatSetting
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+  ModifyChatSettingPermission:
+    Type: AWS::Lambda::Permission
+    DependsOn:
+      - WebSocketAPI
+      - SessionTable
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref ModifyChatSettingFunction
       Principal: apigateway.amazonaws.com
 
 

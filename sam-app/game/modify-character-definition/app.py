@@ -3,6 +3,7 @@ import os
 import boto3
 import base64
 import json
+import requests
 
 from boto3 import Session
 from characterdao import (
@@ -13,20 +14,15 @@ from characterdao import (
 )
 
 
+from common import (
+    get_date_time,
+    decode_base64_to_string,
+    decode_token
+)
+
+
 session_table_name = os.environ["SessionTableName"]
 session = boto3.session.Session()
-
-def decode_base64_to_string(encoded_string):
-    # 将编码后的字符串转换为字节
-    bytes_to_decode = encoded_string.encode('utf-8')
-
-    # 对字节进行Base64解码
-    decoded_bytes = base64.b64decode(bytes_to_decode)
-
-    # 将解码后的字节转换回字符串
-    decoded_string = decoded_bytes.decode('utf-8')
-
-    return decoded_string
 
 
 def handler(event, context):

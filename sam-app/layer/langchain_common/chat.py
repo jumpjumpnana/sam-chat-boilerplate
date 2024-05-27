@@ -208,18 +208,12 @@ def chat(
     }
 
     a = conversation.predict(**input_variables)
-
-    # a = conversation.predict(input=inputInfo)
     print("a:"+a)
 
     # 扣除点数
     deduct_user_messages(boto3_session, um_table_name,uid ,1)
     # 对话量计数
     update_character_messages(boto3_session, cm_table_name, characterId)
-   
-
-
-
 
 
 
@@ -237,7 +231,16 @@ def chat(
     #     SystemMessagePromptTemplate.from_template(systemEnd)
     # ])
 
+    # memory = ConversationBufferMemory(chat_memory=history,return_messages=True)
+    # conversation = ConversationChain(llm=llm,memory=memory)
+    # conversation.prompt = prompt_template
 
+    # a = conversation.predict(input=inputInfo)
+
+    # # 扣除点数
+    # deduct_user_messages(boto3_session, um_table_name,uid ,1)
+    # # 对话量计数
+    # update_character_messages(boto3_session, cm_table_name, characterId)
 
 
 
