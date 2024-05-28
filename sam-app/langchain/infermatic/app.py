@@ -42,5 +42,5 @@ prompt = ChatPromptTemplate
 
 def handler(event, context):
     # call the common chat function in the layer/langchain_common/chat.py
-    chat(event, llm, boto3_session, session_table_name,cd_table_name,cm_table_name,um_table_name, ai_prefix, prompt)
+    chat(event, llm, boto3_session, session_table_name,cd_table_name,cm_table_name,um_table_name, ai_prefix, prompt,'ChatAnyscale')
     return {"statusCode": 200}

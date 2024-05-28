@@ -11,6 +11,7 @@ from langchain.prompts import (
     PromptTemplate
 )
 from langchain_community.chat_models import ChatDeepInfra
+from langchain.llms import DeepInfra
 
 # from mistralai.client import MistralClient
 # from mistralai.models.chat_completion import ChatMessage
@@ -31,6 +32,7 @@ model_name = os.environ.get("Model_Name")
 
 
 os.environ['DEEPINFRA_API_TOKEN'] = api_key
+# llm = DeepInfra(model_id=model_name)
 llm = ChatDeepInfra(model=model_name,streaming=True)
 llm.model_kwargs = {'temperature': 0.7, 'repetition_penalty': 1, 'max_new_tokens': 200, 'top_p': 0.9}
 print("model:"+model_name)
@@ -43,5 +45,7 @@ prompt = ChatPromptTemplate  # use default
 
 def handler(event, context):
     # call the common chat function in the layer/langchain_common/chat.py
-    chat(event, llm, boto3_session, session_table_name,cd_table_name,cm_table_name,um_table_name, ai_prefix, prompt)
+    chat(event, llm, boto3_session, session_table_name,cd_table_name,cm_table_name,um_table_name, ai_prefix, prompt,'ChatDeepInfra')
+
+
     return {"statusCode": 200}
