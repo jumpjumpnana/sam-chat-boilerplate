@@ -206,11 +206,10 @@ def chat(
         "input": inputInfo,
         "history": ChatPromptTemplate.format(ChatPromptTemplate.from_messages(history_message))
     }
-    print(f"memory:{ChatPromptTemplate.format(ChatPromptTemplate.from_messages(history_message))}")
-    print(f"messages:{ChatPromptTemplate.format(ChatPromptTemplate.from_messages(messages))}")
-    prompt_template = ChatPromptTemplate.format(ChatPromptTemplate.from_messages(messages))
+    # print(f"memory:{ChatPromptTemplate.format(ChatPromptTemplate.from_messages(history_message))}")
+    # prompt_template = ChatPromptTemplate.format(ChatPromptTemplate.from_messages(messages))
 
-    a = llm.invoke(**input_variables, prompt = prompt_template)
+    a = llm.invoke(**input_variables, prompt = ChatPromptTemplate.format(ChatPromptTemplate.from_messages(messages)))
     print("a:"+a)
 
     # 存history
