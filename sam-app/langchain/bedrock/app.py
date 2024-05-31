@@ -10,7 +10,7 @@ session_table_name = os.environ["SessionTableName"]
 cd_table_name = os.environ["CDTableName"]
 cm_table_name = os.environ["CMTableName"]
 um_table_name = os.environ["UMTableName"]
-chat_setting_table_name = os.environ["ChatSettingTableName"]
+cs_table_name = os.environ["ChatSettingTableName"]
 ai_prefix = os.environ.get(
     "AI_Prefix",
     # by default (Claude), this is "Assistant"
@@ -30,5 +30,5 @@ boto3_session = boto3.session.Session()
 
 def handler(event, context):
     # call the common chat function in the layer/langchain_common/chat.py
-    chat(event, llm, boto3_session, session_table_name,cd_table_name,cm_table_name,um_table_name, ai_prefix, prompt,'Bedrock')
+    chat(event, llm, boto3_session, session_table_name,cd_table_name,cm_table_name,um_table_name,cs_table_name, ai_prefix, prompt,'Bedrock')
     return {"statusCode": 200}

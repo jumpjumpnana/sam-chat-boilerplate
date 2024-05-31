@@ -28,6 +28,31 @@ from callback import StreamingAPIGatewayWebSocketCallbackHandler
 from langchain_core.messages import HumanMessage, SystemMessage, AIMessage
 from langchain.schema import messages_to_dict
 
+# from transformers import GPT2TokenizerFast
+
+# import nltk
+# from nltk.tokenize import word_tokenize
+
+# import nltk
+# from io import BytesIO
+# # 获取S3客户端
+# s3 = boto3.client('s3')
+# # # 下载S3上的数据包到内存中
+# s3_object = s3.get_object(Bucket='daais3', Key='tools/nltk/tokenizers/punkt.zip')
+# zip_data = BytesIO(s3_object['Body'].read())
+
+# # # 解压到/tmp目录，Lambda的临时目录
+# with zipfile.ZipFile(zip_data) as z:
+#     z.extractall('/tmp/nltk_data')
+    
+# # 添加解压后的目录到NLTK数据路径
+# nltk.data.path.append('/tmp/nltk_data')
+# nltk.data.path.append('s3://daais3/tools/nltk/tokenizers/punkt/')
+# from nltk.tokenize import sent_tokenize
+
+
+
+
 from characterdao import (
     CharacterDefinition,
     get_character_definition,
@@ -55,6 +80,23 @@ from common import (
     decode_token
 )
 
+from ChatSettingDao import (
+    ChatSetting,
+    get_chat_setting
+)
+
+
+# 截取回复
+def get_complete_sentences(text):
+    sentences = sent_tokenize(text)
+    complete_text = ' '.join(sentences[:-1])
+    last_sentence = sentences[-1]
+    
+    # 检查最后一句是否完整
+    if text.endswith(last_sentence):
+        complete_text += ' ' + last_sentence
+        
+    return complete_text.strip()
 
 
 def chat(
@@ -65,6 +107,7 @@ def chat(
     cd_table_name: str,
     cm_table_name: str,
     um_table_name: str,
+    cs_table_name: str,
     ai_prefix: str,
     prompt: PromptTemplate,
     llmType:str
@@ -110,14 +153,14 @@ def chat(
                 })
     )
 
-    # if not uid:
-    #     try:
-    #         raise ValueError("User identifier (uid) not found in the request.")
-    #     except Exception as e:
-    #         custom_message = "User identifier (uid) not found in the request."
-    #         error_code = -1
-    #         callback.on_llm_error(error=e, message=custom_message, error_code=error_code)
-    #     return
+    if not uid:
+        try:
+            raise ValueError("User identifier (uid) not found in the request.")
+        except Exception as e:
+            custom_message = "User identifier (uid) not found in the request."
+            error_code = -1
+            callback.on_llm_error(error=e, message=custom_message, error_code=error_code)
+        return
     
 
     # # 判断消息数是否足够扣除
@@ -134,6 +177,19 @@ def chat(
 
     llm.callbacks = [callback]
 
+    # 设置setting属性值
+    chat_setting = get_chat_setting(boto3_session, cs_table_name, uid)
+    memory_size = 1750
+    if chat_setting:
+        llm.model_kwargs = {'temperature': chat_setting.temperature, 'repetition_penalty': chat_setting.repetition_penalty, 
+                                'max_tokens': chat_setting.max_tokens, 'top_p': chat_setting.top_p, 'top_k': chat_setting.top_k}
+        memory_size = chat_setting.memory_size
+        print(f"ChatSetting:{chat_setting}")
+    else:
+        llm.model_kwargs = {'temperature': 0.7, 'repetition_penalty': 1, 'max_tokens': 175, 'top_p': 0.9, 'top_k': 0}
+        print("Unsupported LLM type. Default Setting")
+
+    print(f"memory_size:{memory_size}")
 
     history = DynamoDBChatMessageHistory(
         table_name=session_table_name,
@@ -191,26 +247,53 @@ def chat(
         SystemMessage(content=systemNSFW),
         # HumanMessage(content=userInfo,example=True),
         AIMessage(content=greeting,example=True),
-        MessagesPlaceholder(variable_name="history")
+        MessagesPlaceholder(variable_name="history"),
+        ("human", "{input}")
     ]
     # if repeat != 1:
-    messages.append(HumanMessage(content=inputInfo))
     messages.append(SystemMessage(content=systemEnd))
     
-    memory = ConversationBufferMemory(chat_memory=history,return_messages=True)
-    # print(f"memory:{memory.load_memory_variables({}).get("history",[])}")
+    memory = ConversationBufferMemory(chat_memory=history,return_messages=True,max_token_limit=30)
 
     history_message = memory.load_memory_variables({}).get("history",[])
 
-    input_variables = {
-        "input": inputInfo,
-        "history": ChatPromptTemplate.format(ChatPromptTemplate.from_messages(history_message))
-    }
-    # print(f"memory:{ChatPromptTemplate.format(ChatPromptTemplate.from_messages(history_message))}")
-    # prompt_template = ChatPromptTemplate.format(ChatPromptTemplate.from_messages(messages))
+    prompt_template = ChatPromptTemplate.from_messages(messages)
 
-    a = llm.invoke(**input_variables, prompt = ChatPromptTemplate.format(ChatPromptTemplate.from_messages(messages)))
+    chain = prompt_template | llm
+
+    a = chain.invoke({"input": inputInfo, "history": history_message}).content
     print("a:"+a)
+    # if "punkt" not in nltk.data.find("tokenizers"):
+    #     print("download==========")
+    #     nltk.download("punkt")
+    # else:
+    #     print("not download==========")
+    # print("ok==========")
+
+    # complete_reply = get_complete_sentences(a)
+    # # # 使用回调函数发送处理后的回复
+    # print("==========")
+    # print(complete_reply)
+
+    # 保存对话上下文
+    # curr_buffer_length = word_tokenize(str(memory.buffer_as_messages))
+    # print("buffer:")
+    # print(str(memory.buffer_as_messages))
+    # curr_buffer_length = llm.get_num_tokens_from_messages(memory.buffer_as_messages)
+    # print("curr_buffer_length:")
+    # print(curr_buffer_length)
+    # print(curr_buffer_length > memory.max_token_limit)
+    # memory.save_context(
+    #     inputs={"input": inputInfo, "history": history_message},
+    #     outputs={"response": a}
+    # )
+
+    
+    # callback.on_end()
+    # print("==========在这里回复？")
+
+    # print("==========")
+    # print(memory.load_memory_variables({}).get("history",[]))
 
     # 存history
     history.add_ai_message(a)

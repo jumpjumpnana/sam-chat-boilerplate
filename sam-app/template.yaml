@@ -77,6 +77,7 @@ Resources:
 
   ChatSetting:
     Type: AWS::Serverless::SimpleTable
+    DeletionPolicy: Retain
     Properties:
       PrimaryKey:
         Name: uid
@@ -84,6 +85,7 @@ Resources:
 
   UserMessages:
     Type: AWS::Serverless::SimpleTable
+    DeletionPolicy: Retain
     Properties:
       PrimaryKey:
         Name: uid
@@ -91,6 +93,7 @@ Resources:
 
   CharacterMessages:
     Type: AWS::Serverless::SimpleTable
+    DeletionPolicy: Retain
     Properties:
       PrimaryKey:
         Name: cid
@@ -109,6 +112,7 @@ Resources:
 
   CharacterDefinition:
     Type: AWS::Serverless::SimpleTable
+    DeletionPolicy: Retain
     Properties:
       PrimaryKey:
         Name: id
@@ -116,6 +120,7 @@ Resources:
 
   SessionTable:
     Type: AWS::Serverless::SimpleTable
+    DeletionPolicy: Retain
     Properties:
       PrimaryKey:
         Name: SessionId
@@ -1556,6 +1561,10 @@ Resources:
                 - "bedrock:InvokeModelWithResponseStream"
               Resource:
                 - "arn:aws:bedrock:*::foundation-model/*"
+        # - S3ReadPolicy:
+        #     BucketName: daais3/tools
+        #     Actions:
+        #       - s3:GetObject 
   LangChainDeepinfraWizardLM27BPermission:
     Type: AWS::Lambda::Permission
     DependsOn:
@@ -2863,36 +2872,6 @@ Resources:
       FunctionName: !Ref CreateChatFromSavedFunction
       Principal: apigateway.amazonaws.com
 
-
-  # ModifyChatSetting
-  ModifyChatSettingFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: game/modify-chat-setting/
-      Layers:
-        - !Ref LangChainCommonLayer
-        - !Ref CommonLayer
-      Environment:
-        Variables:
-          TableName: !Ref ChatSetting
-      Policies:
-        - DynamoDBCrudPolicy:
-            TableName: !Ref ChatSetting
-        - Statement:
-            - Effect: Allow
-              Action:
-                - "execute-api:ManageConnections"
-              Resource:
-                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
-  ModifyChatSettingPermission:
-    Type: AWS::Lambda::Permission
-    DependsOn:
-      - WebSocketAPI
-      - SessionTable
-    Properties:
-      Action: lambda:InvokeFunction
-      FunctionName: !Ref ModifyChatSettingFunction
-      Principal: apigateway.amazonaws.com
 
 
   # bedrock

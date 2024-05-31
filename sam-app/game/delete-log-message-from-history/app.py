@@ -24,7 +24,10 @@ table_name = os.environ["TableName"]
 
 def handler(event, context):
     try:
-        body = json.loads(event['body'])
+        bodyStr = event["body"]
+        bodyJson = decode_base64_to_string(bodyStr)
+        body = json.loads(bodyJson)
+        print("body:"+str(body))
         token = str(body.get('token'))
         connection_id = str(body.get('connection_id'))
         logMessageIdList = str(body.get('logMessageIdList'))
@@ -65,6 +68,7 @@ def handler(event, context):
         return {"statusCode": 200, "body": "Success"}
         
     except Exception as e:
+        print("Error:", e)
         # 这里捕获所有未预料到的异常，并返回500错误
         print("An unexpected error occurred:", str(e))
         return {"statusCode": 500, "body": "Internal Server Error: " + str(e)}

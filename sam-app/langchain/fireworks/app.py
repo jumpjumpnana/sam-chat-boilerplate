@@ -17,7 +17,7 @@ session_table_name = os.environ["SessionTableName"]
 cd_table_name = os.environ["CDTableName"]
 cm_table_name = os.environ["CMTableName"]
 um_table_name = os.environ["UMTableName"]
-chat_setting_table_name = os.environ["ChatSettingTableName"]
+cs_table_name = os.environ["ChatSettingTableName"]
 api_base = os.environ.get("API_Base")  # default is official API
 api_key = os.environ.get(
     "API_Key",
@@ -29,7 +29,7 @@ model_name = os.environ.get("Model_Name")
 
 os.environ['FIREWORKS_API_KEY'] = api_key
 llm = ChatFireworks(model=model_name,streaming=True)
-llm.model_kwargs = {"max_tokens":200,'temperature': 0.7, 'top_p': 0.9}
+# llm.model_kwargs = {"max_tokens":200,'temperature': 0.7, 'top_p': 0.9}
 
 print("model:"+model_name)
 
@@ -41,7 +41,7 @@ prompt = ChatPromptTemplate  # use default
 
 def handler(event, context):
     # call the common chat function in the layer/langchain_common/chat.py
-    chat(event, llm, boto3_session, session_table_name,cd_table_name,cm_table_name,um_table_name, ai_prefix, prompt,'ChatFireworks')
+    chat(event, llm, boto3_session, session_table_name,cd_table_name,cm_table_name,um_table_name,cs_table_name, ai_prefix, prompt,'ChatFireworks')
     return {"statusCode": 200}
 
 

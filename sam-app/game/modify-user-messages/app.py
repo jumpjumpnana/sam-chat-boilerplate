@@ -55,6 +55,7 @@ def handler(event, context):
         return {"statusCode": 200, "body": json.dumps(response)}  # 确保响应体也是json格式
         
     except Exception as e:
+        print("Error:", e)
         # 这里捕获所有未预料到的异常，并返回500错误
         print("An unexpected error occurred:", str(e))
         return {"statusCode": 500, "body": "Internal Server Error: " + str(e)}

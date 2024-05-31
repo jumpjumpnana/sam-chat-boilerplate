@@ -15,7 +15,7 @@ session_table_name = os.environ["SessionTableName"]
 cd_table_name = os.environ["CDTableName"]
 cm_table_name = os.environ["CMTableName"]
 um_table_name = os.environ["UMTableName"]
-chat_setting_table_name = os.environ["ChatSettingTableName"]
+cs_table_name = os.environ["ChatSettingTableName"]
 open_ai_api_base = os.environ.get("OpenAI_API_Base")  # default is official API
 openai_api_key = os.environ.get(
     "OpenAI_API_Key",
@@ -42,5 +42,5 @@ prompt = ChatPromptTemplate
 
 def handler(event, context):
     # call the common chat function in the layer/langchain_common/chat.py
-    chat(event, llm, boto3_session, session_table_name,cd_table_name,cm_table_name,um_table_name, ai_prefix, prompt,'ChatAnyscale')
+    chat(event, llm, boto3_session, session_table_name,cd_table_name,cm_table_name,um_table_name,cs_table_name, ai_prefix, prompt,'ChatAnyscale')
     return {"statusCode": 200}
