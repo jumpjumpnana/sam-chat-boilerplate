@@ -32,6 +32,7 @@ from langchain.schema import messages_to_dict
 
 # import nltk
 # from nltk.tokenize import word_tokenize
+# from nltk.tokenize import sent_tokenize
 
 # import nltk
 # from io import BytesIO
@@ -48,7 +49,7 @@ from langchain.schema import messages_to_dict
 # # 添加解压后的目录到NLTK数据路径
 # nltk.data.path.append('/tmp/nltk_data')
 # nltk.data.path.append('s3://daais3/tools/nltk/tokenizers/punkt/')
-# from nltk.tokenize import sent_tokenize
+
 
 
 
@@ -187,7 +188,7 @@ def chat(
         print(f"ChatSetting:{chat_setting}")
     else:
         llm.model_kwargs = {'temperature': 0.7, 'repetition_penalty': 1, 'max_tokens': 175, 'top_p': 0.9, 'top_k': 0}
-        print("Unsupported LLM type. Default Setting")
+        print("Default Chat Setting")
 
     print(f"memory_size:{memory_size}")
 

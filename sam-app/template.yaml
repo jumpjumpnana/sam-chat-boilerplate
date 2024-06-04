@@ -23,6 +23,9 @@ Globals:
     # but we use Lambda async invocation for llm related functions
     # so it's safe to set this greater than 29
     Timeout: 300
+    MemorySize: 512
+    EphemeralStorage: 
+      Size: 1024
 
 Resources:
   # websocket api
