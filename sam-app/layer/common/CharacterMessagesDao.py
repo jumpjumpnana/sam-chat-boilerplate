@@ -110,7 +110,7 @@ def get_updated_character_messages(session: Session, table_name: str) -> Optiona
         updateFlag = dateTime
         response = table.query(
             IndexName='UpdateFlagIndex',  # 假设GSI的名称为'UpdateFlagIndex'
-            KeyConditionExpression=Key('updateFlag').eq(updateFlag),  # 查询publicFlag等于1的记录
+            KeyConditionExpression=Key('updateFlag').eq(updateFlag),  
         )
         items = response.get('Items', [])
         if items:

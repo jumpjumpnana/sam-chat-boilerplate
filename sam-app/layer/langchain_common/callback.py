@@ -44,7 +44,7 @@ class StreamingAPIGatewayWebSocketCallbackHandler(BaseCallbackHandler):
                 Data=self.on_token(token),
             )
 
-    def on_llm_end(self, response: LLMResult, **kwargs: Any) -> Any:
+    def on_llm_end(self, response: Any = None, **kwargs: Any) -> Any:
         if self.on_end is not None:
             self.apigw.post_to_connection(
                 ConnectionId=self.connection_id,

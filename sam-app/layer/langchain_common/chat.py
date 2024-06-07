@@ -28,31 +28,6 @@ from callback import StreamingAPIGatewayWebSocketCallbackHandler
 from langchain_core.messages import HumanMessage, SystemMessage, AIMessage
 from langchain.schema import messages_to_dict
 
-# from transformers import GPT2TokenizerFast
-
-# import nltk
-# from nltk.tokenize import word_tokenize
-# from nltk.tokenize import sent_tokenize
-
-# import nltk
-# from io import BytesIO
-# # 获取S3客户端
-# s3 = boto3.client('s3')
-# # # 下载S3上的数据包到内存中
-# s3_object = s3.get_object(Bucket='daais3', Key='tools/nltk/tokenizers/punkt.zip')
-# zip_data = BytesIO(s3_object['Body'].read())
-
-# # # 解压到/tmp目录，Lambda的临时目录
-# with zipfile.ZipFile(zip_data) as z:
-#     z.extractall('/tmp/nltk_data')
-    
-# # 添加解压后的目录到NLTK数据路径
-# nltk.data.path.append('/tmp/nltk_data')
-# nltk.data.path.append('s3://daais3/tools/nltk/tokenizers/punkt/')
-
-
-
-
 
 from characterdao import (
     CharacterDefinition,
@@ -86,18 +61,13 @@ from ChatSettingDao import (
     get_chat_setting
 )
 
+from tokenizer import (
+    get_complete_sentences,
+    word_tokenize,
+    trim_history
+)
 
-# 截取回复
-def get_complete_sentences(text):
-    sentences = sent_tokenize(text)
-    complete_text = ' '.join(sentences[:-1])
-    last_sentence = sentences[-1]
-    
-    # 检查最后一句是否完整
-    if text.endswith(last_sentence):
-        complete_text += ' ' + last_sentence
-        
-    return complete_text.strip()
+
 
 
 def chat(
@@ -176,7 +146,7 @@ def chat(
     #     return
 
 
-    llm.callbacks = [callback]
+    # llm.callbacks = [callback]
 
     # 设置setting属性值
     chat_setting = get_chat_setting(boto3_session, cs_table_name, uid)
@@ -254,7 +224,7 @@ def chat(
     # if repeat != 1:
     messages.append(SystemMessage(content=systemEnd))
     
-    memory = ConversationBufferMemory(chat_memory=history,return_messages=True,max_token_limit=30)
+    memory = ConversationBufferMemory(chat_memory=history,return_messages=True)
 
     history_message = memory.load_memory_variables({}).get("history",[])
 
@@ -264,47 +234,42 @@ def chat(
 
     a = chain.invoke({"input": inputInfo, "history": history_message}).content
     print("a:"+a)
-    # if "punkt" not in nltk.data.find("tokenizers"):
-    #     print("download==========")
-    #     nltk.download("punkt")
-    # else:
-    #     print("not download==========")
-    # print("ok==========")
 
-    # complete_reply = get_complete_sentences(a)
-    # # # 使用回调函数发送处理后的回复
-    # print("==========")
-    # print(complete_reply)
+    complete_reply = get_complete_sentences(a)
+    # # 使用回调函数发送处理后的回复
+    print("==========")
+    print(complete_reply)
+    # response存history
+    history.add_user_message(inputInfo)
+    history.add_ai_message(complete_reply)
 
-    # 保存对话上下文
-    # curr_buffer_length = word_tokenize(str(memory.buffer_as_messages))
-    # print("buffer:")
-    # print(str(memory.buffer_as_messages))
-    # curr_buffer_length = llm.get_num_tokens_from_messages(memory.buffer_as_messages)
-    # print("curr_buffer_length:")
-    # print(curr_buffer_length)
-    # print(curr_buffer_length > memory.max_token_limit)
+    # 截取response,重新分词，手动调用callback
+    tokens = word_tokenize(complete_reply)
+    # 将 tokens 发送给客户端
+    for token in tokens:
+        callback.on_llm_new_token(token)
+    # 发送结束消息
+    callback.on_llm_end()
+
     # memory.save_context(
     #     inputs={"input": inputInfo, "history": history_message},
-    #     outputs={"response": a}
+    #     outputs={"response": complete_reply}
     # )
 
+    # # 处理history,判断是否超过memory_size限制
+    trim_his = trim_history(memory.buffer_as_messages,'','',memory_size)
+    if trim_his:
+        print("截取之后的memory=========="+str(trim_his))
+        # 更新dynamo中history
+        history.clear()
+        history.add_messages(trim_his)
+
     
-    # callback.on_end()
-    # print("==========在这里回复？")
-
-    # print("==========")
-    # print(memory.load_memory_variables({}).get("history",[]))
-
-    # 存history
-    history.add_ai_message(a)
 
     # 扣除点数
     deduct_user_messages(boto3_session, um_table_name,uid ,1)
     # 对话量计数
     update_character_messages(boto3_session, cm_table_name, characterId)
-
-
 
 
 
@@ -335,32 +300,6 @@ def chat(
     # a = conversation.predict(**input_variables)
     # print("a:"+a)
 
-
-
-
-    # prompt_template = ChatPromptTemplate.from_messages([
-    #     SystemMessagePromptTemplate.from_template(systemPro),
-    #     SystemMessagePromptTemplate.from_template(systemPersonality),
-    #     SystemMessagePromptTemplate.from_template(systemScenario),
-    #     SystemMessagePromptTemplate.from_template(systemNSFW),
-    #     # HumanMessage(content=userInfo,example=True),
-    #     AIMessage(content=greeting,example=True),
-
-    #     MessagesPlaceholder(variable_name="history"),
-    #     HumanMessagePromptTemplate.from_template(inputInfo),
-    #     SystemMessagePromptTemplate.from_template(systemEnd)
-    # ])
-
-    # memory = ConversationBufferMemory(chat_memory=history,return_messages=True)
-    # conversation = ConversationChain(llm=llm,memory=memory)
-    # conversation.prompt = prompt_template
-
-    # a = conversation.predict(input=inputInfo)
-
-    # # 扣除点数
-    # deduct_user_messages(boto3_session, um_table_name,uid ,1)
-    # # 对话量计数
-    # update_character_messages(boto3_session, cm_table_name, characterId)
 
 
 

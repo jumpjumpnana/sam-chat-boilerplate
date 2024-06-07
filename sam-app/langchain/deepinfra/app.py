@@ -33,7 +33,7 @@ model_name = os.environ.get("Model_Name")
 
 os.environ['DEEPINFRA_API_TOKEN'] = api_key
 # llm = DeepInfra(model_id=model_name)
-llm = ChatDeepInfra(model=model_name,streaming=True)
+llm = ChatDeepInfra(model=model_name,streaming=False)
 # llm.model_kwargs = {'temperature': 0.7, 'repetition_penalty': 1, 'max_tokens': 175, 'top_p': 0.9, 'top_k': 0}
 print("model:"+model_name)
 

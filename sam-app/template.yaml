@@ -40,25 +40,8 @@ Resources:
     Type: AWS::ApiGatewayV2::Deployment
     DependsOn:
       - LangChainFireworksMixtralMoE8x7BInstructRoute
-      - LangChainFireworksLlama270BChatRoute
-      - LangChainFireworksChineseLlama2LoRA7BRoute
-      - LangChainFireworksFireFunctionV1Route
-      - LangChainFireworksDBRXInstructRoute
-      - LangChainFireworksLlama213BFrenchRoute
-      - LangChainFireworksYi34BChatRoute
-      - LangChainFireworksNousHermes2Mixtral8x7BRoute
-      - LangChainFireworksQwen14BChatRoute
-      - LangChainFireworksMistral7BInstructRoute
-      - LangChainDeepinfraPygmalion13b4bit128gRoute
+      - LangChainDeepinfraMixtral822BInstructRoute
       - LangChainDeepinfraDolphin26mixtral8x7bRoute
-      - LangChainDeepinfraAiroboros70bRoute
-      - LangChainDeepinfraLzlv70bfp16hfRoute
-      - LangChainDeepinfraAiroborosl270bgpt4141Route
-      - LangChainDeepinfraMixtral8x7BInstructv01Route
-      - LangChainDeepinfraMistral7BInstructv01Route
-      - LangChainDeepinfraGrypheMythonMaxL213bRoute
-      - LangChainDeepinfraDBRXInstructRoute
-      - LangChainDeepinfraZephyrOrpo141bA35bV01Route
       - LangChainDeepinfraWizardLM27BRoute
       - LangChainDeepinfraWizardLM2822BRoute
       - LangChainInfermaticMiquMaidV370BRoute
@@ -472,39 +455,40 @@ Resources:
       Principal: apigateway.amazonaws.com
 
 
-       # langchain/deepinfra/dbrx-instruct
-  LangChainDeepinfraDBRXInstructRoute:
+  # langchain/deepinfra/Mixtral-8x22B-Instruct
+  LangChainDeepinfraMixtral822BInstructRoute:
     Type: AWS::ApiGatewayV2::Route
     Properties:
       ApiId: !Ref WebSocketAPI
-      RouteKey: langchain/deepinfra/dbrx-instruct
+      RouteKey: langchain/deepinfra/Mixtral-8x22B-Instruct
       AuthorizationType: NONE
       Target: !Join
         - "/"
         - - "integrations"
-          - !Ref LangChainDeepinfraDBRXInstructIntegration
-  LangChainDeepinfraDBRXInstructIntegration:
+          - !Ref LangChainDeepinfraMixtral822BInstructIntegration
+  LangChainDeepinfraMixtral822BInstructIntegration:
     Type: AWS::ApiGatewayV2::Integration
     Properties:
       ApiId: !Ref WebSocketAPI
       IntegrationType: AWS
       IntegrationUri:
         # see https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html
-        Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LangChainDeepinfraDBRXInstructFunction.Arn}/invocations
+        Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LangChainDeepinfraMixtral822BInstructFunction.Arn}/invocations
       RequestParameters: *AsyncLambdaIntegrationRequestParameters
       RequestTemplates: *AsyncLambdaIntegrationRequestTemplates
-  LangChainDeepinfraDBRXInstructFunction:
+  LangChainDeepinfraMixtral822BInstructFunction:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: langchain/deepinfra/
       Layers:
         - !Ref LangChainCommonLayer
         - !Ref CommonLayer
+        - !Ref NltkLayer
       Environment:
         Variables:
           API_Base: "https://api.deepinfra.com/v1/openai"
           API_Key: "1iubpJyGRvVCwIcbwaamAro95AqWR9mE"
-          Model_Name: "databricks/dbrx-instruct"
+          Model_Name: "mistralai/Mixtral-8x22B-Instruct-v0.1"
           SessionTableName: !Ref SessionTable
           CDTableName: !Ref CharacterDefinition
           CMTableName: !Ref CharacterMessages
@@ -557,7 +541,7 @@ Resources:
                 - "bedrock:InvokeModelWithResponseStream"
               Resource:
                 - "arn:aws:bedrock:*::foundation-model/*"
-  LangChainDeepinfraDBRXInstructPermission:
+  LangChainDeepinfraMixtral822BInstructPermission:
     Type: AWS::Lambda::Permission
     DependsOn:
       - WebSocketAPI
@@ -568,715 +552,12 @@ Resources:
       - ChatSetting
     Properties:
       Action: lambda:InvokeFunction
-      FunctionName: !Ref LangChainDeepinfraDBRXInstructFunction
-      Principal: apigateway.amazonaws.com
-
-
-  # langchain/deepinfra/zephyr-orpo-141b-A35b-v0.1
-  LangChainDeepinfraZephyrOrpo141bA35bV01Route:
-    Type: AWS::ApiGatewayV2::Route
-    Properties:
-      ApiId: !Ref WebSocketAPI
-      RouteKey: langchain/deepinfra/zephyr-orpo-141b-A35b-v0.1
-      AuthorizationType: NONE
-      Target: !Join
-        - "/"
-        - - "integrations"
-          - !Ref LangChainDeepinfraZephyrOrpo141bA35bV01Integration
-  LangChainDeepinfraZephyrOrpo141bA35bV01Integration:
-    Type: AWS::ApiGatewayV2::Integration
-    Properties:
-      ApiId: !Ref WebSocketAPI
-      IntegrationType: AWS
-      IntegrationUri:
-        # see https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html
-        Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LangChainDeepinfraZephyrOrpo141bA35bV01Function.Arn}/invocations
-      RequestParameters: *AsyncLambdaIntegrationRequestParameters
-      RequestTemplates: *AsyncLambdaIntegrationRequestTemplates
-  LangChainDeepinfraZephyrOrpo141bA35bV01Function:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: langchain/deepinfra/
-      Layers:
-        - !Ref LangChainCommonLayer
-        - !Ref CommonLayer
-      Environment:
-        Variables:
-          API_Base: "https://api.deepinfra.com/v1/openai"
-          API_Key: "1iubpJyGRvVCwIcbwaamAro95AqWR9mE"
-          Model_Name: "HuggingFaceH4/zephyr-orpo-141b-A35b-v0.1"
-          SessionTableName: !Ref SessionTable
-          CDTableName: !Ref CharacterDefinition
-          CMTableName: !Ref CharacterMessages
-          UMTableName: !Ref UserMessages
-          ChatSettingTableName: !Ref ChatSetting
-      Policies:
-        - DynamoDBCrudPolicy:
-            TableName: !Ref SessionTable
-        - Statement:
-            - Effect: Allow
-              Action:
-                - "execute-api:ManageConnections"
-              Resource:
-                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
-        - DynamoDBCrudPolicy:
-            TableName: !Ref CharacterDefinition
-        - Statement:
-            - Effect: Allow
-              Action:
-                - "execute-api:ManageConnections"
-              Resource:
-                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
-        - DynamoDBCrudPolicy:
-            TableName: !Ref CharacterMessages
-        - Statement:
-            - Effect: Allow
-              Action:
-                - "execute-api:ManageConnections"
-              Resource:
-                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
-        - DynamoDBCrudPolicy:
-            TableName: !Ref UserMessages
-        - Statement:
-            - Effect: Allow
-              Action:
-                - "execute-api:ManageConnections"
-              Resource:
-                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
-        - DynamoDBCrudPolicy:
-            TableName: !Ref ChatSetting
-        - Statement:
-            - Effect: Allow
-              Action:
-                - "execute-api:ManageConnections"
-              Resource:
-                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
-            - Effect: Allow
-              Action:
-                - "bedrock:InvokeModel"
-                - "bedrock:InvokeModelWithResponseStream"
-              Resource:
-                - "arn:aws:bedrock:*::foundation-model/*"
-  LangChainDeepinfraZephyrOrpo141bA35bV01Permission:
-    Type: AWS::Lambda::Permission
-    DependsOn:
-      - WebSocketAPI
-      - SessionTable
-      - CharacterDefinition
-      - CharacterMessages
-      - UserMessages
-      - ChatSetting
-    Properties:
-      Action: lambda:InvokeFunction
-      FunctionName: !Ref LangChainDeepinfraZephyrOrpo141bA35bV01Function
+      FunctionName: !Ref LangChainDeepinfraMixtral822BInstructFunction
       Principal: apigateway.amazonaws.com
 
 
 
-      # langchain/deepinfra/Gryphe-MythoMax-L2-13b
-  LangChainDeepinfraGrypheMythonMaxL213bRoute:
-    Type: AWS::ApiGatewayV2::Route
-    Properties:
-      ApiId: !Ref WebSocketAPI
-      RouteKey: langchain/deepinfra/MythoMax-L2-13b
-      AuthorizationType: NONE
-      Target: !Join
-        - "/"
-        - - "integrations"
-          - !Ref LangChainDeepinfraGrypheMythonMaxL213bIntegration
-  LangChainDeepinfraGrypheMythonMaxL213bIntegration:
-    Type: AWS::ApiGatewayV2::Integration
-    Properties:
-      ApiId: !Ref WebSocketAPI
-      IntegrationType: AWS
-      IntegrationUri:
-        # see https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html
-        Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LangChainDeepinfraGrypheMythonMaxL213bFunction.Arn}/invocations
-      RequestParameters: *AsyncLambdaIntegrationRequestParameters
-      RequestTemplates: *AsyncLambdaIntegrationRequestTemplates
-  LangChainDeepinfraGrypheMythonMaxL213bFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: langchain/deepinfra/
-      Layers:
-        - !Ref LangChainCommonLayer
-        - !Ref CommonLayer
-      Environment:
-        Variables:
-          API_Base: "https://api.deepinfra.com/v1/openai"
-          API_Key: "1iubpJyGRvVCwIcbwaamAro95AqWR9mE"
-          Model_Name: "Gryphe/MythoMax-L2-13b"
-          SessionTableName: !Ref SessionTable
-          CDTableName: !Ref CharacterDefinition
-          CMTableName: !Ref CharacterMessages
-          UMTableName: !Ref UserMessages
-          ChatSettingTableName: !Ref ChatSetting
-      Policies:
-        - DynamoDBCrudPolicy:
-            TableName: !Ref SessionTable
-        - Statement:
-            - Effect: Allow
-              Action:
-                - "execute-api:ManageConnections"
-              Resource:
-                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
-        - DynamoDBCrudPolicy:
-            TableName: !Ref CharacterDefinition
-        - Statement:
-            - Effect: Allow
-              Action:
-                - "execute-api:ManageConnections"
-              Resource:
-                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
-        - DynamoDBCrudPolicy:
-            TableName: !Ref CharacterMessages
-        - Statement:
-            - Effect: Allow
-              Action:
-                - "execute-api:ManageConnections"
-              Resource:
-                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
-        - DynamoDBCrudPolicy:
-            TableName: !Ref UserMessages
-        - Statement:
-            - Effect: Allow
-              Action:
-                - "execute-api:ManageConnections"
-              Resource:
-                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
-        - DynamoDBCrudPolicy:
-            TableName: !Ref ChatSetting
-        - Statement:
-            - Effect: Allow
-              Action:
-                - "execute-api:ManageConnections"
-              Resource:
-                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
-            - Effect: Allow
-              Action:
-                - "bedrock:InvokeModel"
-                - "bedrock:InvokeModelWithResponseStream"
-              Resource:
-                - "arn:aws:bedrock:*::foundation-model/*"
-  LangChainDeepinfraGrypheMythonMaxL213bPermission:
-    Type: AWS::Lambda::Permission
-    DependsOn:
-      - WebSocketAPI
-      - SessionTable
-      - CharacterDefinition
-      - CharacterMessages
-      - UserMessages
-      - ChatSetting
-    Properties:
-      Action: lambda:InvokeFunction
-      FunctionName: !Ref LangChainDeepinfraGrypheMythonMaxL213bFunction
-      Principal: apigateway.amazonaws.com
-
-
- # langchain/deepinfra/Mistral-7B-Instruct-v0.1
-  LangChainDeepinfraMistral7BInstructv01Route:
-    Type: AWS::ApiGatewayV2::Route
-    Properties:
-      ApiId: !Ref WebSocketAPI
-      RouteKey: langchain/deepinfra/Mistral-7B-Instruct-v0.1
-      AuthorizationType: NONE
-      Target: !Join
-        - "/"
-        - - "integrations"
-          - !Ref LangChainDeepinfraMistral7BInstructv01Integration
-  LangChainDeepinfraMistral7BInstructv01Integration:
-    Type: AWS::ApiGatewayV2::Integration
-    Properties:
-      ApiId: !Ref WebSocketAPI
-      IntegrationType: AWS
-      IntegrationUri:
-        # see https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html
-        Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LangChainDeepinfraMistral7BInstructv01Function.Arn}/invocations
-      RequestParameters: *AsyncLambdaIntegrationRequestParameters
-      RequestTemplates: *AsyncLambdaIntegrationRequestTemplates
-  LangChainDeepinfraMistral7BInstructv01Function:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: langchain/deepinfra/
-      Layers:
-        - !Ref LangChainCommonLayer
-        - !Ref CommonLayer
-      Environment:
-        Variables:
-          API_Base: "https://api.deepinfra.com/v1/openai"
-          API_Key: "1iubpJyGRvVCwIcbwaamAro95AqWR9mE"
-          Model_Name: "mistralai/Mistral-7B-Instruct-v0.1"
-          SessionTableName: !Ref SessionTable
-          CDTableName: !Ref CharacterDefinition
-          CMTableName: !Ref CharacterMessages
-          UMTableName: !Ref UserMessages
-          ChatSettingTableName: !Ref ChatSetting
-      Policies:
-        - DynamoDBCrudPolicy:
-            TableName: !Ref SessionTable
-        - Statement:
-            - Effect: Allow
-              Action:
-                - "execute-api:ManageConnections"
-              Resource:
-                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
-        - DynamoDBCrudPolicy:
-            TableName: !Ref CharacterDefinition
-        - Statement:
-            - Effect: Allow
-              Action:
-                - "execute-api:ManageConnections"
-              Resource:
-                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
-        - DynamoDBCrudPolicy:
-            TableName: !Ref CharacterMessages
-        - Statement:
-            - Effect: Allow
-              Action:
-                - "execute-api:ManageConnections"
-              Resource:
-                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
-        - DynamoDBCrudPolicy:
-            TableName: !Ref UserMessages
-        - Statement:
-            - Effect: Allow
-              Action:
-                - "execute-api:ManageConnections"
-              Resource:
-                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
-        - DynamoDBCrudPolicy:
-            TableName: !Ref ChatSetting
-        - Statement:
-            - Effect: Allow
-              Action:
-                - "execute-api:ManageConnections"
-              Resource:
-                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
-            - Effect: Allow
-              Action:
-                - "bedrock:InvokeModel"
-                - "bedrock:InvokeModelWithResponseStream"
-              Resource:
-                - "arn:aws:bedrock:*::foundation-model/*"
-  LangChainDeepinfraMistral7BInstructv01Permission:
-    Type: AWS::Lambda::Permission
-    DependsOn:
-      - WebSocketAPI
-      - SessionTable
-      - CharacterDefinition
-      - CharacterMessages
-      - UserMessages
-      - ChatSetting
-    Properties:
-      Action: lambda:InvokeFunction
-      FunctionName: !Ref LangChainDeepinfraMistral7BInstructv01Function
-      Principal: apigateway.amazonaws.com
-
-
-
-      # langchain/deepinfra/Mixtral-8x7B-Instruct-v0.1
-  LangChainDeepinfraMixtral8x7BInstructv01Route:
-    Type: AWS::ApiGatewayV2::Route
-    Properties:
-      ApiId: !Ref WebSocketAPI
-      RouteKey: langchain/deepinfra/Mixtral-8x7B-Instruct-v0.1
-      AuthorizationType: NONE
-      Target: !Join
-        - "/"
-        - - "integrations"
-          - !Ref LangChainDeepinfraMixtral8x7BInstructv01Integration
-  LangChainDeepinfraMixtral8x7BInstructv01Integration:
-    Type: AWS::ApiGatewayV2::Integration
-    Properties:
-      ApiId: !Ref WebSocketAPI
-      IntegrationType: AWS
-      IntegrationUri:
-        # see https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html
-        Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LangChainDeepinfraMixtral8x7BInstructv01Function.Arn}/invocations
-      RequestParameters: *AsyncLambdaIntegrationRequestParameters
-      RequestTemplates: *AsyncLambdaIntegrationRequestTemplates
-  LangChainDeepinfraMixtral8x7BInstructv01Function:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: langchain/deepinfra/
-      Layers:
-        - !Ref LangChainCommonLayer
-        - !Ref CommonLayer
-      Environment:
-        Variables:
-          API_Base: "https://api.deepinfra.com/v1/openai"
-          API_Key: "1iubpJyGRvVCwIcbwaamAro95AqWR9mE"
-          Model_Name: "mistralai/Mixtral-8x7B-Instruct-v0.1"
-          SessionTableName: !Ref SessionTable
-          CDTableName: !Ref CharacterDefinition
-          CMTableName: !Ref CharacterMessages
-          UMTableName: !Ref UserMessages
-          ChatSettingTableName: !Ref ChatSetting
-      Policies:
-        - DynamoDBCrudPolicy:
-            TableName: !Ref SessionTable
-        - Statement:
-            - Effect: Allow
-              Action:
-                - "execute-api:ManageConnections"
-              Resource:
-                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
-        - DynamoDBCrudPolicy:
-            TableName: !Ref CharacterDefinition
-        - Statement:
-            - Effect: Allow
-              Action:
-                - "execute-api:ManageConnections"
-              Resource:
-                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
-        - DynamoDBCrudPolicy:
-            TableName: !Ref CharacterMessages
-        - Statement:
-            - Effect: Allow
-              Action:
-                - "execute-api:ManageConnections"
-              Resource:
-                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
-        - DynamoDBCrudPolicy:
-            TableName: !Ref UserMessages
-        - Statement:
-            - Effect: Allow
-              Action:
-                - "execute-api:ManageConnections"
-              Resource:
-                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
-        - DynamoDBCrudPolicy:
-            TableName: !Ref ChatSetting
-        - Statement:
-            - Effect: Allow
-              Action:
-                - "execute-api:ManageConnections"
-              Resource:
-                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
-            - Effect: Allow
-              Action:
-                - "bedrock:InvokeModel"
-                - "bedrock:InvokeModelWithResponseStream"
-              Resource:
-                - "arn:aws:bedrock:*::foundation-model/*"
-  LangChainDeepinfraMixtral8x7BInstructv01Permission:
-    Type: AWS::Lambda::Permission
-    DependsOn:
-      - WebSocketAPI
-      - SessionTable
-      - CharacterDefinition
-      - CharacterMessages
-      - UserMessages
-      - ChatSetting
-    Properties:
-      Action: lambda:InvokeFunction
-      FunctionName: !Ref LangChainDeepinfraMixtral8x7BInstructv01Function
-      Principal: apigateway.amazonaws.com
-
-
-       # langchain/deepinfra/airoboros-l2-70b-gpt4-1.4.1
-  LangChainDeepinfraAiroborosl270bgpt4141Route:
-    Type: AWS::ApiGatewayV2::Route
-    Properties:
-      ApiId: !Ref WebSocketAPI
-      RouteKey: langchain/deepinfra/airoboros-l2-70b-gpt4-1.4.1
-      AuthorizationType: NONE
-      Target: !Join
-        - "/"
-        - - "integrations"
-          - !Ref LangChainDeepinfraAiroborosl270bgpt4141Integration
-  LangChainDeepinfraAiroborosl270bgpt4141Integration:
-    Type: AWS::ApiGatewayV2::Integration
-    Properties:
-      ApiId: !Ref WebSocketAPI
-      IntegrationType: AWS
-      IntegrationUri:
-        # see https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html
-        Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LangChainDeepinfraAiroborosl270bgpt4141Function.Arn}/invocations
-      RequestParameters: *AsyncLambdaIntegrationRequestParameters
-      RequestTemplates: *AsyncLambdaIntegrationRequestTemplates
-  LangChainDeepinfraAiroborosl270bgpt4141Function:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: langchain/deepinfra/
-      Layers:
-        - !Ref LangChainCommonLayer
-        - !Ref CommonLayer
-      Environment:
-        Variables:
-          API_Base: "https://api.deepinfra.com/v1/openai"
-          API_Key: "1iubpJyGRvVCwIcbwaamAro95AqWR9mE"
-          Model_Name: "jondurbin/airoboros-l2-70b-gpt4-1.4.1"
-          SessionTableName: !Ref SessionTable
-          CDTableName: !Ref CharacterDefinition
-          CMTableName: !Ref CharacterMessages
-          UMTableName: !Ref UserMessages
-          ChatSettingTableName: !Ref ChatSetting
-      Policies:
-        - DynamoDBCrudPolicy:
-            TableName: !Ref SessionTable
-        - Statement:
-            - Effect: Allow
-              Action:
-                - "execute-api:ManageConnections"
-              Resource:
-                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
-        - DynamoDBCrudPolicy:
-            TableName: !Ref CharacterDefinition
-        - Statement:
-            - Effect: Allow
-              Action:
-                - "execute-api:ManageConnections"
-              Resource:
-                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
-        - DynamoDBCrudPolicy:
-            TableName: !Ref CharacterMessages
-        - Statement:
-            - Effect: Allow
-              Action:
-                - "execute-api:ManageConnections"
-              Resource:
-                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
-        - DynamoDBCrudPolicy:
-            TableName: !Ref UserMessages
-        - Statement:
-            - Effect: Allow
-              Action:
-                - "execute-api:ManageConnections"
-              Resource:
-                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
-        - DynamoDBCrudPolicy:
-            TableName: !Ref ChatSetting
-        - Statement:
-            - Effect: Allow
-              Action:
-                - "execute-api:ManageConnections"
-              Resource:
-                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
-            - Effect: Allow
-              Action:
-                - "bedrock:InvokeModel"
-                - "bedrock:InvokeModelWithResponseStream"
-              Resource:
-                - "arn:aws:bedrock:*::foundation-model/*"
-  LangChainDeepinfraAiroborosl270bgpt4141Permission:
-    Type: AWS::Lambda::Permission
-    DependsOn:
-      - WebSocketAPI
-      - SessionTable
-      - CharacterDefinition
-      - CharacterMessages
-      - UserMessages
-      - ChatSetting
-    Properties:
-      Action: lambda:InvokeFunction
-      FunctionName: !Ref LangChainDeepinfraAiroborosl270bgpt4141Function
-      Principal: apigateway.amazonaws.com
-
-
-
-      # langchain/deepinfra/lzlv_70b_fp16_hf
-  LangChainDeepinfraLzlv70bfp16hfRoute:
-    Type: AWS::ApiGatewayV2::Route
-    Properties:
-      ApiId: !Ref WebSocketAPI
-      RouteKey: langchain/deepinfra/lzlv_70b_fp16_hf
-      AuthorizationType: NONE
-      Target: !Join
-        - "/"
-        - - "integrations"
-          - !Ref LangChainDeepinfraLzlv70bfp16hfIntegration
-  LangChainDeepinfraLzlv70bfp16hfIntegration:
-    Type: AWS::ApiGatewayV2::Integration
-    Properties:
-      ApiId: !Ref WebSocketAPI
-      IntegrationType: AWS
-      IntegrationUri:
-        # see https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html
-        Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LangChainDeepinfraLzlv70bfp16hfFunction.Arn}/invocations
-      RequestParameters: *AsyncLambdaIntegrationRequestParameters
-      RequestTemplates: *AsyncLambdaIntegrationRequestTemplates
-  LangChainDeepinfraLzlv70bfp16hfFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: langchain/deepinfra/
-      Layers:
-        - !Ref LangChainCommonLayer
-        - !Ref CommonLayer
-      Environment:
-        Variables:
-          API_Base: "https://api.deepinfra.com/v1/openai"
-          API_Key: "1iubpJyGRvVCwIcbwaamAro95AqWR9mE"
-          Model_Name: "lizpreciatior/lzlv_70b_fp16_hf"
-          SessionTableName: !Ref SessionTable
-          CDTableName: !Ref CharacterDefinition
-          CMTableName: !Ref CharacterMessages
-          UMTableName: !Ref UserMessages
-          ChatSettingTableName: !Ref ChatSetting
-      Policies:
-        - DynamoDBCrudPolicy:
-            TableName: !Ref SessionTable
-        - Statement:
-            - Effect: Allow
-              Action:
-                - "execute-api:ManageConnections"
-              Resource:
-                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
-        - DynamoDBCrudPolicy:
-            TableName: !Ref CharacterDefinition
-        - Statement:
-            - Effect: Allow
-              Action:
-                - "execute-api:ManageConnections"
-              Resource:
-                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
-        - DynamoDBCrudPolicy:
-            TableName: !Ref CharacterMessages
-        - Statement:
-            - Effect: Allow
-              Action:
-                - "execute-api:ManageConnections"
-              Resource:
-                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
-        - DynamoDBCrudPolicy:
-            TableName: !Ref UserMessages
-        - Statement:
-            - Effect: Allow
-              Action:
-                - "execute-api:ManageConnections"
-              Resource:
-                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
-        - DynamoDBCrudPolicy:
-            TableName: !Ref ChatSetting
-        - Statement:
-            - Effect: Allow
-              Action:
-                - "execute-api:ManageConnections"
-              Resource:
-                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
-            - Effect: Allow
-              Action:
-                - "bedrock:InvokeModel"
-                - "bedrock:InvokeModelWithResponseStream"
-              Resource:
-                - "arn:aws:bedrock:*::foundation-model/*"
-  LangChainDeepinfraLzlv70bfp16hfPermission:
-    Type: AWS::Lambda::Permission
-    DependsOn:
-      - WebSocketAPI
-      - SessionTable
-      - CharacterDefinition
-      - CharacterMessages
-      - UserMessages
-      - ChatSetting
-    Properties:
-      Action: lambda:InvokeFunction
-      FunctionName: !Ref LangChainDeepinfraLzlv70bfp16hfFunction
-      Principal: apigateway.amazonaws.com
-
-
-
-# langchain/deepinfra/airoboros-70b
-  LangChainDeepinfraAiroboros70bRoute:
-    Type: AWS::ApiGatewayV2::Route
-    Properties:
-      ApiId: !Ref WebSocketAPI
-      RouteKey: langchain/deepinfra/airoboros-70b
-      AuthorizationType: NONE
-      Target: !Join
-        - "/"
-        - - "integrations"
-          - !Ref LangChainDeepinfraAiroboros70bIntegration
-  LangChainDeepinfraAiroboros70bIntegration:
-    Type: AWS::ApiGatewayV2::Integration
-    Properties:
-      ApiId: !Ref WebSocketAPI
-      IntegrationType: AWS
-      IntegrationUri:
-        # see https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html
-        Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LangChainDeepinfraAiroboros70bFunction.Arn}/invocations
-      RequestParameters: *AsyncLambdaIntegrationRequestParameters
-      RequestTemplates: *AsyncLambdaIntegrationRequestTemplates
-  LangChainDeepinfraAiroboros70bFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: langchain/deepinfra/
-      Layers:
-        - !Ref LangChainCommonLayer
-        - !Ref CommonLayer
-      Environment:
-        Variables:
-          API_Base: "https://api.deepinfra.com/v1/openai"
-          API_Key: "1iubpJyGRvVCwIcbwaamAro95AqWR9mE"
-          Model_Name: "deepinfra/airoboros-70b"
-          SessionTableName: !Ref SessionTable
-          CDTableName: !Ref CharacterDefinition
-          CMTableName: !Ref CharacterMessages
-          UMTableName: !Ref UserMessages
-          ChatSettingTableName: !Ref ChatSetting
-      Policies:
-        - DynamoDBCrudPolicy:
-            TableName: !Ref SessionTable
-        - Statement:
-            - Effect: Allow
-              Action:
-                - "execute-api:ManageConnections"
-              Resource:
-                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
-        - DynamoDBCrudPolicy:
-            TableName: !Ref CharacterDefinition
-        - Statement:
-            - Effect: Allow
-              Action:
-                - "execute-api:ManageConnections"
-              Resource:
-                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
-        - DynamoDBCrudPolicy:
-            TableName: !Ref CharacterMessages
-        - Statement:
-            - Effect: Allow
-              Action:
-                - "execute-api:ManageConnections"
-              Resource:
-                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
-        - DynamoDBCrudPolicy:
-            TableName: !Ref UserMessages
-        - Statement:
-            - Effect: Allow
-              Action:
-                - "execute-api:ManageConnections"
-              Resource:
-                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
-        - DynamoDBCrudPolicy:
-            TableName: !Ref ChatSetting
-        - Statement:
-            - Effect: Allow
-              Action:
-                - "execute-api:ManageConnections"
-              Resource:
-                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
-            - Effect: Allow
-              Action:
-                - "bedrock:InvokeModel"
-                - "bedrock:InvokeModelWithResponseStream"
-              Resource:
-                - "arn:aws:bedrock:*::foundation-model/*"
-  LangChainDeepinfraAiroboros70bPermission:
-    Type: AWS::Lambda::Permission
-    DependsOn:
-      - WebSocketAPI
-      - SessionTable
-      - CharacterDefinition
-      - CharacterMessages
-      - UserMessages
-      - ChatSetting
-    Properties:
-      Action: lambda:InvokeFunction
-      FunctionName: !Ref LangChainDeepinfraAiroboros70bFunction
-      Principal: apigateway.amazonaws.com
-
-
-# langchain/deepinfra/dolphin-2.6-mixtral-8x7b
+  # langchain/deepinfra/dolphin-2.6-mixtral-8x7b
   LangChainDeepinfraDolphin26mixtral8x7bRoute:
     Type: AWS::ApiGatewayV2::Route
     Properties:
@@ -1304,6 +585,7 @@ Resources:
       Layers:
         - !Ref LangChainCommonLayer
         - !Ref CommonLayer
+        - !Ref NltkLayer
       Environment:
         Variables:
           API_Base: "https://api.deepinfra.com/v1/openai"
@@ -1377,108 +659,6 @@ Resources:
 
 
 
-      # langchain/deepinfra/pygmalion-13b-4bit-128g
-  LangChainDeepinfraPygmalion13b4bit128gRoute:
-    Type: AWS::ApiGatewayV2::Route
-    Properties:
-      ApiId: !Ref WebSocketAPI
-      RouteKey: langchain/deepinfra/pygmalion-13b-4bit-128g
-      AuthorizationType: NONE
-      Target: !Join
-        - "/"
-        - - "integrations"
-          - !Ref LangChainDeepinfraPygmalion13b4bit128gIntegration
-  LangChainDeepinfraPygmalion13b4bit128gIntegration:
-    Type: AWS::ApiGatewayV2::Integration
-    Properties:
-      ApiId: !Ref WebSocketAPI
-      IntegrationType: AWS
-      IntegrationUri:
-        # see https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html
-        Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LangChainDeepinfraPygmalion13b4bit128gFunction.Arn}/invocations
-      RequestParameters: *AsyncLambdaIntegrationRequestParameters
-      RequestTemplates: *AsyncLambdaIntegrationRequestTemplates
-  LangChainDeepinfraPygmalion13b4bit128gFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: langchain/deepinfra/
-      Layers:
-        - !Ref LangChainCommonLayer
-        - !Ref CommonLayer
-      Environment:
-        Variables:
-          API_Base: "https://api.deepinfra.com/v1/openai"
-          API_Key: "1iubpJyGRvVCwIcbwaamAro95AqWR9mE"
-          Model_Name: "DeepInfra/pygmalion-13b-4bit-128g"
-          SessionTableName: !Ref SessionTable
-          CDTableName: !Ref CharacterDefinition
-          CMTableName: !Ref CharacterMessages
-          UMTableName: !Ref UserMessages
-          ChatSettingTableName: !Ref ChatSetting
-      Policies:
-        - DynamoDBCrudPolicy:
-            TableName: !Ref SessionTable
-        - Statement:
-            - Effect: Allow
-              Action:
-                - "execute-api:ManageConnections"
-              Resource:
-                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
-        - DynamoDBCrudPolicy:
-            TableName: !Ref CharacterDefinition
-        - Statement:
-            - Effect: Allow
-              Action:
-                - "execute-api:ManageConnections"
-              Resource:
-                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
-        - DynamoDBCrudPolicy:
-            TableName: !Ref CharacterMessages
-        - Statement:
-            - Effect: Allow
-              Action:
-                - "execute-api:ManageConnections"
-              Resource:
-                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
-        - DynamoDBCrudPolicy:
-            TableName: !Ref UserMessages
-        - Statement:
-            - Effect: Allow
-              Action:
-                - "execute-api:ManageConnections"
-              Resource:
-                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
-        - DynamoDBCrudPolicy:
-            TableName: !Ref ChatSetting
-        - Statement:
-            - Effect: Allow
-              Action:
-                - "execute-api:ManageConnections"
-              Resource:
-                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
-            - Effect: Allow
-              Action:
-                - "bedrock:InvokeModel"
-                - "bedrock:InvokeModelWithResponseStream"
-              Resource:
-                - "arn:aws:bedrock:*::foundation-model/*"
-  LangChainDeepinfraPygmalion13b4bit128gPermission:
-    Type: AWS::Lambda::Permission
-    DependsOn:
-      - WebSocketAPI
-      - SessionTable
-      - CharacterDefinition
-      - CharacterMessages
-      - UserMessages
-      - ChatSetting
-    Properties:
-      Action: lambda:InvokeFunction
-      FunctionName: !Ref LangChainDeepinfraPygmalion13b4bit128gFunction
-      Principal: apigateway.amazonaws.com
-
-
-
-
    # langchain/deepinfra/WizardLM-2-7B
   LangChainDeepinfraWizardLM27BRoute:
     Type: AWS::ApiGatewayV2::Route
@@ -1507,6 +687,7 @@ Resources:
       Layers:
         - !Ref LangChainCommonLayer
         - !Ref CommonLayer
+        - !Ref NltkLayer
       Environment:
         Variables:
           API_Base: "https://api.deepinfra.com/v1/openai"
@@ -1584,9 +765,6 @@ Resources:
 
 
 
-
-
-
   # langchain/deepinfra/WizardLM-2-8x22B
   LangChainDeepinfraWizardLM2822BRoute:
     Type: AWS::ApiGatewayV2::Route
@@ -1615,6 +793,7 @@ Resources:
       Layers:
         - !Ref LangChainCommonLayer
         - !Ref CommonLayer
+        - !Ref NltkLayer
       Environment:
         Variables:
           API_Base: "https://api.deepinfra.com/v1/openai"
@@ -1685,8 +864,6 @@ Resources:
       Action: lambda:InvokeFunction
       FunctionName: !Ref LangChainDeepinfraWizardLM2822BFunction
       Principal: apigateway.amazonaws.com
-
-
 
 
 
@@ -1791,911 +968,11 @@ Resources:
 
 
 
-      # langchain/fireworks/Llama-2-70B-Chat
-  LangChainFireworksLlama270BChatRoute:
-    Type: AWS::ApiGatewayV2::Route
-    Properties:
-      ApiId: !Ref WebSocketAPI
-      RouteKey: langchain/fireworks/Llama-2-70B-Chat
-      AuthorizationType: NONE
-      Target: !Join
-        - "/"
-        - - "integrations"
-          - !Ref LangChainFireworksLlama270BChatIntegration
-  LangChainFireworksLlama270BChatIntegration:
-    Type: AWS::ApiGatewayV2::Integration
-    Properties:
-      ApiId: !Ref WebSocketAPI
-      IntegrationType: AWS
-      IntegrationUri:
-        # see https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html
-        Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LangChainFireworksLlama270BChatFunction.Arn}/invocations
-      RequestParameters: *AsyncLambdaIntegrationRequestParameters
-      RequestTemplates: *AsyncLambdaIntegrationRequestTemplates
-  LangChainFireworksLlama270BChatFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: langchain/fireworks/
-      Layers:
-        - !Ref LangChainCommonLayer
-        - !Ref CommonLayer
-      Environment:
-        Variables:
-          API_Base: "https://api.fireworks.ai/inference/v1/chat/completions"
-          API_Key: "WglavV6hm0RLeZohaDZcrEjGAedu04GnJbDazBJ2PzmY7nRl"
-          Model_Name: "accounts/fireworks/models/llama-v2-70b-chat"
-          SessionTableName: !Ref SessionTable
-          CDTableName: !Ref CharacterDefinition
-          CMTableName: !Ref CharacterMessages
-          UMTableName: !Ref UserMessages
-          ChatSettingTableName: !Ref ChatSetting
-      Policies:
-        - DynamoDBCrudPolicy:
-            TableName: !Ref SessionTable
-        - Statement:
-            - Effect: Allow
-              Action:
-                - "execute-api:ManageConnections"
-              Resource:
-                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
-        - DynamoDBCrudPolicy:
-            TableName: !Ref CharacterDefinition
-        - Statement:
-            - Effect: Allow
-              Action:
-                - "execute-api:ManageConnections"
-              Resource:
-                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
-        - DynamoDBCrudPolicy:
-            TableName: !Ref CharacterMessages
-        - Statement:
-            - Effect: Allow
-              Action:
-                - "execute-api:ManageConnections"
-              Resource:
-                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
-        - DynamoDBCrudPolicy:
-            TableName: !Ref UserMessages
-        - Statement:
-            - Effect: Allow
-              Action:
-                - "execute-api:ManageConnections"
-              Resource:
-                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
-        - DynamoDBCrudPolicy:
-            TableName: !Ref ChatSetting
-        - Statement:
-            - Effect: Allow
-              Action:
-                - "execute-api:ManageConnections"
-              Resource:
-                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
-            - Effect: Allow
-              Action:
-                - "bedrock:InvokeModel"
-                - "bedrock:InvokeModelWithResponseStream"
-              Resource:
-                - "arn:aws:bedrock:*::foundation-model/*"
-  LangChainFireworksLlama270BChatPermission:
-    Type: AWS::Lambda::Permission
-    DependsOn:
-      - WebSocketAPI
-      - SessionTable
-      - CharacterDefinition
-      - CharacterMessages
-      - UserMessages
-      - ChatSetting
-    Properties:
-      Action: lambda:InvokeFunction
-      FunctionName: !Ref LangChainFireworksLlama270BChatFunction
-      Principal: apigateway.amazonaws.com
-
-
-      # langchain/fireworks/Chinese-Llama-2-LoRA-7B
-  LangChainFireworksChineseLlama2LoRA7BRoute:
-    Type: AWS::ApiGatewayV2::Route
-    Properties:
-      ApiId: !Ref WebSocketAPI
-      RouteKey: langchain/fireworks/Chinese-Llama-2-LoRA-7B
-      AuthorizationType: NONE
-      Target: !Join
-        - "/"
-        - - "integrations"
-          - !Ref LangChainFireworksChineseLlama2LoRA7BIntegration
-  LangChainFireworksChineseLlama2LoRA7BIntegration:
-    Type: AWS::ApiGatewayV2::Integration
-    Properties:
-      ApiId: !Ref WebSocketAPI
-      IntegrationType: AWS
-      IntegrationUri:
-        # see https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html
-        Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LangChainFireworksChineseLlama2LoRA7BFunction.Arn}/invocations
-      RequestParameters: *AsyncLambdaIntegrationRequestParameters
-      RequestTemplates: *AsyncLambdaIntegrationRequestTemplates
-  LangChainFireworksChineseLlama2LoRA7BFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: langchain/fireworks/
-      Layers:
-        - !Ref LangChainCommonLayer
-        - !Ref CommonLayer
-      Environment:
-        Variables:
-          API_Base: "https://api.fireworks.ai/inference/v1/chat/completions"
-          API_Key: "WglavV6hm0RLeZohaDZcrEjGAedu04GnJbDazBJ2PzmY7nRl"
-          Model_Name: "accounts/fireworks/models/chinese-llama-2-lora-7b"
-          SessionTableName: !Ref SessionTable
-          CDTableName: !Ref CharacterDefinition
-          CMTableName: !Ref CharacterMessages
-          UMTableName: !Ref UserMessages
-          ChatSettingTableName: !Ref ChatSetting
-      Policies:
-        - DynamoDBCrudPolicy:
-            TableName: !Ref SessionTable
-        - Statement:
-            - Effect: Allow
-              Action:
-                - "execute-api:ManageConnections"
-              Resource:
-                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
-        - DynamoDBCrudPolicy:
-            TableName: !Ref CharacterDefinition
-        - Statement:
-            - Effect: Allow
-              Action:
-                - "execute-api:ManageConnections"
-              Resource:
-                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
-        - DynamoDBCrudPolicy:
-            TableName: !Ref CharacterMessages
-        - Statement:
-            - Effect: Allow
-              Action:
-                - "execute-api:ManageConnections"
-              Resource:
-                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
-        - DynamoDBCrudPolicy:
-            TableName: !Ref UserMessages
-        - Statement:
-            - Effect: Allow
-              Action:
-                - "execute-api:ManageConnections"
-              Resource:
-                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
-        - DynamoDBCrudPolicy:
-            TableName: !Ref ChatSetting
-        - Statement:
-            - Effect: Allow
-              Action:
-                - "execute-api:ManageConnections"
-              Resource:
-                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
-            - Effect: Allow
-              Action:
-                - "bedrock:InvokeModel"
-                - "bedrock:InvokeModelWithResponseStream"
-              Resource:
-                - "arn:aws:bedrock:*::foundation-model/*"
-  LangChainFireworksChineseLlama2LoRA7BPermission:
-    Type: AWS::Lambda::Permission
-    DependsOn:
-      - WebSocketAPI
-      - SessionTable
-      - CharacterDefinition
-      - CharacterMessages
-      - UserMessages
-      - ChatSetting
-    Properties:
-      Action: lambda:InvokeFunction
-      FunctionName: !Ref LangChainFireworksChineseLlama2LoRA7BFunction
-      Principal: apigateway.amazonaws.com
-
-
-      # langchain/fireworks/FireFunction-V1
-  LangChainFireworksFireFunctionV1Route:
-    Type: AWS::ApiGatewayV2::Route
-    Properties:
-      ApiId: !Ref WebSocketAPI
-      RouteKey: langchain/fireworks/FireFunction-V1
-      AuthorizationType: NONE
-      Target: !Join
-        - "/"
-        - - "integrations"
-          - !Ref LangChainFireworksFireFunctionV1Integration
-  LangChainFireworksFireFunctionV1Integration:
-    Type: AWS::ApiGatewayV2::Integration
-    Properties:
-      ApiId: !Ref WebSocketAPI
-      IntegrationType: AWS
-      IntegrationUri:
-        # see https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html
-        Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LangChainFireworksFireFunctionV1Function.Arn}/invocations
-      RequestParameters: *AsyncLambdaIntegrationRequestParameters
-      RequestTemplates: *AsyncLambdaIntegrationRequestTemplates
-  LangChainFireworksFireFunctionV1Function:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: langchain/fireworks/
-      Layers:
-        - !Ref LangChainCommonLayer
-        - !Ref CommonLayer
-      Environment:
-        Variables:
-          API_Base: "https://api.fireworks.ai/inference/v1/chat/completions"
-          API_Key: "WglavV6hm0RLeZohaDZcrEjGAedu04GnJbDazBJ2PzmY7nRl"
-          Model_Name: "accounts/fireworks/models/firefunction-v1"
-          SessionTableName: !Ref SessionTable
-          CDTableName: !Ref CharacterDefinition
-          CMTableName: !Ref CharacterMessages
-          UMTableName: !Ref UserMessages
-          ChatSettingTableName: !Ref ChatSetting
-      Policies:
-        - DynamoDBCrudPolicy:
-            TableName: !Ref SessionTable
-        - Statement:
-            - Effect: Allow
-              Action:
-                - "execute-api:ManageConnections"
-              Resource:
-                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
-        - DynamoDBCrudPolicy:
-            TableName: !Ref CharacterDefinition
-        - Statement:
-            - Effect: Allow
-              Action:
-                - "execute-api:ManageConnections"
-              Resource:
-                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
-        - DynamoDBCrudPolicy:
-            TableName: !Ref CharacterMessages
-        - Statement:
-            - Effect: Allow
-              Action:
-                - "execute-api:ManageConnections"
-              Resource:
-                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
-        - DynamoDBCrudPolicy:
-            TableName: !Ref UserMessages
-        - Statement:
-            - Effect: Allow
-              Action:
-                - "execute-api:ManageConnections"
-              Resource:
-                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
-        - DynamoDBCrudPolicy:
-            TableName: !Ref ChatSetting
-        - Statement:
-            - Effect: Allow
-              Action:
-                - "execute-api:ManageConnections"
-              Resource:
-                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
-            - Effect: Allow
-              Action:
-                - "bedrock:InvokeModel"
-                - "bedrock:InvokeModelWithResponseStream"
-              Resource:
-                - "arn:aws:bedrock:*::foundation-model/*"
-  LangChainFireworksFireFunctionV1Permission:
-    Type: AWS::Lambda::Permission
-    DependsOn:
-      - WebSocketAPI
-      - SessionTable
-      - CharacterDefinition
-      - CharacterMessages
-      - UserMessages
-      - ChatSetting
-    Properties:
-      Action: lambda:InvokeFunction
-      FunctionName: !Ref LangChainFireworksFireFunctionV1Function
-      Principal: apigateway.amazonaws.com
-
-
-       # langchain/fireworks/DBRX-Instruct
-  LangChainFireworksDBRXInstructRoute:
-    Type: AWS::ApiGatewayV2::Route
-    Properties:
-      ApiId: !Ref WebSocketAPI
-      RouteKey: langchain/fireworks/DBRX-Instruct
-      AuthorizationType: NONE
-      Target: !Join
-        - "/"
-        - - "integrations"
-          - !Ref LangChainFireworksDBRXInstructIntegration
-  LangChainFireworksDBRXInstructIntegration:
-    Type: AWS::ApiGatewayV2::Integration
-    Properties:
-      ApiId: !Ref WebSocketAPI
-      IntegrationType: AWS
-      IntegrationUri:
-        # see https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html
-        Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LangChainFireworksDBRXInstructFunction.Arn}/invocations
-      RequestParameters: *AsyncLambdaIntegrationRequestParameters
-      RequestTemplates: *AsyncLambdaIntegrationRequestTemplates
-  LangChainFireworksDBRXInstructFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: langchain/fireworks/
-      Layers:
-        - !Ref LangChainCommonLayer
-        - !Ref CommonLayer
-      Environment:
-        Variables:
-          API_Base: "https://api.fireworks.ai/inference/v1/chat/completions"
-          API_Key: "WglavV6hm0RLeZohaDZcrEjGAedu04GnJbDazBJ2PzmY7nRl"
-          Model_Name: "accounts/fireworks/models/dbrx-instruct"
-          SessionTableName: !Ref SessionTable
-          CDTableName: !Ref CharacterDefinition
-          CMTableName: !Ref CharacterMessages
-          UMTableName: !Ref UserMessages
-          ChatSettingTableName: !Ref ChatSetting
-      Policies:
-        - DynamoDBCrudPolicy:
-            TableName: !Ref SessionTable
-        - Statement:
-            - Effect: Allow
-              Action:
-                - "execute-api:ManageConnections"
-              Resource:
-                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
-        - DynamoDBCrudPolicy:
-            TableName: !Ref CharacterDefinition
-        - Statement:
-            - Effect: Allow
-              Action:
-                - "execute-api:ManageConnections"
-              Resource:
-                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
-        - DynamoDBCrudPolicy:
-            TableName: !Ref CharacterMessages
-        - Statement:
-            - Effect: Allow
-              Action:
-                - "execute-api:ManageConnections"
-              Resource:
-                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
-        - DynamoDBCrudPolicy:
-            TableName: !Ref UserMessages
-        - Statement:
-            - Effect: Allow
-              Action:
-                - "execute-api:ManageConnections"
-              Resource:
-                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
-        - DynamoDBCrudPolicy:
-            TableName: !Ref ChatSetting
-        - Statement:
-            - Effect: Allow
-              Action:
-                - "execute-api:ManageConnections"
-              Resource:
-                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
-            - Effect: Allow
-              Action:
-                - "bedrock:InvokeModel"
-                - "bedrock:InvokeModelWithResponseStream"
-              Resource:
-                - "arn:aws:bedrock:*::foundation-model/*"
-  LangChainFireworksDBRXInstructPermission:
-    Type: AWS::Lambda::Permission
-    DependsOn:
-      - WebSocketAPI
-      - SessionTable
-      - CharacterDefinition
-      - CharacterMessages
-      - UserMessages
-      - ChatSetting
-    Properties:
-      Action: lambda:InvokeFunction
-      FunctionName: !Ref LangChainFireworksDBRXInstructFunction
-      Principal: apigateway.amazonaws.com
-
-
-      # langchain/fireworks/Llama-2-13B-French
-  LangChainFireworksLlama213BFrenchRoute:
-    Type: AWS::ApiGatewayV2::Route
-    Properties:
-      ApiId: !Ref WebSocketAPI
-      RouteKey: langchain/fireworks/Llama-2-13B-French
-      AuthorizationType: NONE
-      Target: !Join
-        - "/"
-        - - "integrations"
-          - !Ref LangChainFireworksLlama213BFrenchIntegration
-  LangChainFireworksLlama213BFrenchIntegration:
-    Type: AWS::ApiGatewayV2::Integration
-    Properties:
-      ApiId: !Ref WebSocketAPI
-      IntegrationType: AWS
-      IntegrationUri:
-        # see https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html
-        Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LangChainFireworksLlama213BFrenchFunction.Arn}/invocations
-      RequestParameters: *AsyncLambdaIntegrationRequestParameters
-      RequestTemplates: *AsyncLambdaIntegrationRequestTemplates
-  LangChainFireworksLlama213BFrenchFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: langchain/fireworks/
-      Layers:
-        - !Ref LangChainCommonLayer
-        - !Ref CommonLayer
-      Environment:
-        Variables:
-          API_Base: "https://api.fireworks.ai/inference/v1/chat/completions"
-          API_Key: "WglavV6hm0RLeZohaDZcrEjGAedu04GnJbDazBJ2PzmY7nRl"
-          Model_Name: "accounts/fireworks/models/llama-2-13b-fp16-french"
-          SessionTableName: !Ref SessionTable
-          CDTableName: !Ref CharacterDefinition
-          CMTableName: !Ref CharacterMessages
-          UMTableName: !Ref UserMessages
-          ChatSettingTableName: !Ref ChatSetting
-      Policies:
-        - DynamoDBCrudPolicy:
-            TableName: !Ref SessionTable
-        - Statement:
-            - Effect: Allow
-              Action:
-                - "execute-api:ManageConnections"
-              Resource:
-                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
-        - DynamoDBCrudPolicy:
-            TableName: !Ref CharacterDefinition
-        - Statement:
-            - Effect: Allow
-              Action:
-                - "execute-api:ManageConnections"
-              Resource:
-                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
-        - DynamoDBCrudPolicy:
-            TableName: !Ref CharacterMessages
-        - Statement:
-            - Effect: Allow
-              Action:
-                - "execute-api:ManageConnections"
-              Resource:
-                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
-        - DynamoDBCrudPolicy:
-            TableName: !Ref UserMessages
-        - Statement:
-            - Effect: Allow
-              Action:
-                - "execute-api:ManageConnections"
-              Resource:
-                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
-        - DynamoDBCrudPolicy:
-            TableName: !Ref ChatSetting
-        - Statement:
-            - Effect: Allow
-              Action:
-                - "execute-api:ManageConnections"
-              Resource:
-                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
-            - Effect: Allow
-              Action:
-                - "bedrock:InvokeModel"
-                - "bedrock:InvokeModelWithResponseStream"
-              Resource:
-                - "arn:aws:bedrock:*::foundation-model/*"
-  LangChainFireworksLlama213BFrenchPermission:
-    Type: AWS::Lambda::Permission
-    DependsOn:
-      - WebSocketAPI
-      - SessionTable
-      - CharacterDefinition
-      - CharacterMessages
-      - UserMessages
-      - ChatSetting
-    Properties:
-      Action: lambda:InvokeFunction
-      FunctionName: !Ref LangChainFireworksLlama213BFrenchFunction
-      Principal: apigateway.amazonaws.com
-
-
-      # langchain/fireworks/Yi-34B-Chat
-  LangChainFireworksYi34BChatRoute:
-    Type: AWS::ApiGatewayV2::Route
-    Properties:
-      ApiId: !Ref WebSocketAPI
-      RouteKey: langchain/fireworks/Yi-34B-Chat
-      AuthorizationType: NONE
-      Target: !Join
-        - "/"
-        - - "integrations"
-          - !Ref LangChainFireworksYi34BChatIntegration
-  LangChainFireworksYi34BChatIntegration:
-    Type: AWS::ApiGatewayV2::Integration
-    Properties:
-      ApiId: !Ref WebSocketAPI
-      IntegrationType: AWS
-      IntegrationUri:
-        # see https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html
-        Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LangChainFireworksYi34BChatFunction.Arn}/invocations
-      RequestParameters: *AsyncLambdaIntegrationRequestParameters
-      RequestTemplates: *AsyncLambdaIntegrationRequestTemplates
-  LangChainFireworksYi34BChatFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: langchain/fireworks/
-      Layers:
-        - !Ref LangChainCommonLayer
-        - !Ref CommonLayer
-      Environment:
-        Variables:
-          API_Base: "https://api.fireworks.ai/inference/v1/chat/completions"
-          API_Key: "WglavV6hm0RLeZohaDZcrEjGAedu04GnJbDazBJ2PzmY7nRl"
-          Model_Name: "accounts/fireworks/models/yi-34b-chat"
-          SessionTableName: !Ref SessionTable
-          CDTableName: !Ref CharacterDefinition
-          CMTableName: !Ref CharacterMessages
-          UMTableName: !Ref UserMessages
-          ChatSettingTableName: !Ref ChatSetting
-      Policies:
-        - DynamoDBCrudPolicy:
-            TableName: !Ref SessionTable
-        - Statement:
-            - Effect: Allow
-              Action:
-                - "execute-api:ManageConnections"
-              Resource:
-                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
-        - DynamoDBCrudPolicy:
-            TableName: !Ref CharacterDefinition
-        - Statement:
-            - Effect: Allow
-              Action:
-                - "execute-api:ManageConnections"
-              Resource:
-                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
-        - DynamoDBCrudPolicy:
-            TableName: !Ref CharacterMessages
-        - Statement:
-            - Effect: Allow
-              Action:
-                - "execute-api:ManageConnections"
-              Resource:
-                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
-        - DynamoDBCrudPolicy:
-            TableName: !Ref UserMessages
-        - Statement:
-            - Effect: Allow
-              Action:
-                - "execute-api:ManageConnections"
-              Resource:
-                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
-        - DynamoDBCrudPolicy:
-            TableName: !Ref ChatSetting
-        - Statement:
-            - Effect: Allow
-              Action:
-                - "execute-api:ManageConnections"
-              Resource:
-                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
-            - Effect: Allow
-              Action:
-                - "bedrock:InvokeModel"
-                - "bedrock:InvokeModelWithResponseStream"
-              Resource:
-                - "arn:aws:bedrock:*::foundation-model/*"
-  LangChainFireworksYi34BChatPermission:
-    Type: AWS::Lambda::Permission
-    DependsOn:
-      - WebSocketAPI
-      - SessionTable
-      - CharacterDefinition
-      - CharacterMessages
-      - UserMessages
-      - ChatSetting
-    Properties:
-      Action: lambda:InvokeFunction
-      FunctionName: !Ref LangChainFireworksYi34BChatFunction
-      Principal: apigateway.amazonaws.com
- 
-
-  # langchain/fireworks/Nous-Hermes-2-Mixtral-8x7B
-  LangChainFireworksNousHermes2Mixtral8x7BRoute:
-    Type: AWS::ApiGatewayV2::Route
-    Properties:
-      ApiId: !Ref WebSocketAPI
-      RouteKey: langchain/fireworks/Nous-Hermes-2-Mixtral-8x7B
-      AuthorizationType: NONE
-      Target: !Join
-        - "/"
-        - - "integrations"
-          - !Ref LangChainFireworksNousHermes2Mixtral8x7BIntegration
-  LangChainFireworksNousHermes2Mixtral8x7BIntegration:
-    Type: AWS::ApiGatewayV2::Integration
-    Properties:
-      ApiId: !Ref WebSocketAPI
-      IntegrationType: AWS
-      IntegrationUri:
-        # see https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html
-        Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LangChainFireworksNousHermes2Mixtral8x7BFunction.Arn}/invocations
-      RequestParameters: *AsyncLambdaIntegrationRequestParameters
-      RequestTemplates: *AsyncLambdaIntegrationRequestTemplates
-  LangChainFireworksNousHermes2Mixtral8x7BFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: langchain/fireworks/
-      Layers:
-        - !Ref LangChainCommonLayer
-        - !Ref CommonLayer
-      Environment:
-        Variables:
-          API_Base: "https://api.fireworks.ai/inference/v1/chat/completions"
-          API_Key: "WglavV6hm0RLeZohaDZcrEjGAedu04GnJbDazBJ2PzmY7nRl"
-          Model_Name: "accounts/fireworks/models/nous-hermes-2-mixtral-8x7b-dpo-fp8"
-          SessionTableName: !Ref SessionTable
-          CDTableName: !Ref CharacterDefinition
-          CMTableName: !Ref CharacterMessages
-          UMTableName: !Ref UserMessages
-          ChatSettingTableName: !Ref ChatSetting
-      Policies:
-        - DynamoDBCrudPolicy:
-            TableName: !Ref SessionTable
-        - Statement:
-            - Effect: Allow
-              Action:
-                - "execute-api:ManageConnections"
-              Resource:
-                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
-        - DynamoDBCrudPolicy:
-            TableName: !Ref CharacterDefinition
-        - Statement:
-            - Effect: Allow
-              Action:
-                - "execute-api:ManageConnections"
-              Resource:
-                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
-        - DynamoDBCrudPolicy:
-            TableName: !Ref CharacterMessages
-        - Statement:
-            - Effect: Allow
-              Action:
-                - "execute-api:ManageConnections"
-              Resource:
-                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
-        - DynamoDBCrudPolicy:
-            TableName: !Ref UserMessages
-        - Statement:
-            - Effect: Allow
-              Action:
-                - "execute-api:ManageConnections"
-              Resource:
-                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
-        - DynamoDBCrudPolicy:
-            TableName: !Ref ChatSetting
-        - Statement:
-            - Effect: Allow
-              Action:
-                - "execute-api:ManageConnections"
-              Resource:
-                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
-            - Effect: Allow
-              Action:
-                - "bedrock:InvokeModel"
-                - "bedrock:InvokeModelWithResponseStream"
-              Resource:
-                - "arn:aws:bedrock:*::foundation-model/*"
-  LangChainFireworksNousHermes2Mixtral8x7BPermission:
-    Type: AWS::Lambda::Permission
-    DependsOn:
-      - WebSocketAPI
-      - SessionTable
-      - CharacterDefinition
-      - CharacterMessages
-      - UserMessages
-      - ChatSetting
-    Properties:
-      Action: lambda:InvokeFunction
-      FunctionName: !Ref LangChainFireworksNousHermes2Mixtral8x7BFunction
-      Principal: apigateway.amazonaws.com
-
-
-      # langchain/fireworks/Qwen-14B-Chat
-  LangChainFireworksQwen14BChatRoute:
-    Type: AWS::ApiGatewayV2::Route
-    Properties:
-      ApiId: !Ref WebSocketAPI
-      RouteKey: langchain/fireworks/Qwen-14B-Chat
-      AuthorizationType: NONE
-      Target: !Join
-        - "/"
-        - - "integrations"
-          - !Ref LangChainFireworksQwen14BChatIntegration
-  LangChainFireworksQwen14BChatIntegration:
-    Type: AWS::ApiGatewayV2::Integration
-    Properties:
-      ApiId: !Ref WebSocketAPI
-      IntegrationType: AWS
-      IntegrationUri:
-        # see https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html
-        Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LangChainFireworksQwen14BChatFunction.Arn}/invocations
-      RequestParameters: *AsyncLambdaIntegrationRequestParameters
-      RequestTemplates: *AsyncLambdaIntegrationRequestTemplates
-  LangChainFireworksQwen14BChatFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: langchain/fireworks/
-      Layers:
-        - !Ref LangChainCommonLayer
-        - !Ref CommonLayer
-      Environment:
-        Variables:
-          API_Base: "https://api.fireworks.ai/inference/v1/chat/completions"
-          API_Key: "WglavV6hm0RLeZohaDZcrEjGAedu04GnJbDazBJ2PzmY7nRl"
-          Model_Name: "accounts/fireworks/models/qwen-14b-chat"
-          SessionTableName: !Ref SessionTable
-          CDTableName: !Ref CharacterDefinition
-          CMTableName: !Ref CharacterMessages
-          UMTableName: !Ref UserMessages
-          ChatSettingTableName: !Ref ChatSetting
-      Policies:
-        - DynamoDBCrudPolicy:
-            TableName: !Ref SessionTable
-        - Statement:
-            - Effect: Allow
-              Action:
-                - "execute-api:ManageConnections"
-              Resource:
-                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
-        - DynamoDBCrudPolicy:
-            TableName: !Ref CharacterDefinition
-        - Statement:
-            - Effect: Allow
-              Action:
-                - "execute-api:ManageConnections"
-              Resource:
-                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
-        - DynamoDBCrudPolicy:
-            TableName: !Ref CharacterMessages
-        - Statement:
-            - Effect: Allow
-              Action:
-                - "execute-api:ManageConnections"
-              Resource:
-                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
-        - DynamoDBCrudPolicy:
-            TableName: !Ref UserMessages
-        - Statement:
-            - Effect: Allow
-              Action:
-                - "execute-api:ManageConnections"
-              Resource:
-                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
-        - DynamoDBCrudPolicy:
-            TableName: !Ref ChatSetting
-        - Statement:
-            - Effect: Allow
-              Action:
-                - "execute-api:ManageConnections"
-              Resource:
-                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
-            - Effect: Allow
-              Action:
-                - "bedrock:InvokeModel"
-                - "bedrock:InvokeModelWithResponseStream"
-              Resource:
-                - "arn:aws:bedrock:*::foundation-model/*"
-  LangChainFireworksQwen14BChatPermission:
-    Type: AWS::Lambda::Permission
-    DependsOn:
-      - WebSocketAPI
-      - SessionTable
-      - CharacterDefinition
-      - CharacterMessages
-      - UserMessages
-      - ChatSetting
-    Properties:
-      Action: lambda:InvokeFunction
-      FunctionName: !Ref LangChainFireworksQwen14BChatFunction
-      Principal: apigateway.amazonaws.com
-
-
-
-# langchain/fireworks/Mistral-7B-Instruct
-  LangChainFireworksMistral7BInstructRoute:
-    Type: AWS::ApiGatewayV2::Route
-    Properties:
-      ApiId: !Ref WebSocketAPI
-      RouteKey: langchain/fireworks/Mistral-7B-Instruct
-      AuthorizationType: NONE
-      Target: !Join
-        - "/"
-        - - "integrations"
-          - !Ref LangChainFireworksMistral7BInstructIntegration
-  LangChainFireworksMistral7BInstructIntegration:
-    Type: AWS::ApiGatewayV2::Integration
-    Properties:
-      ApiId: !Ref WebSocketAPI
-      IntegrationType: AWS
-      IntegrationUri:
-        # see https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html
-        Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LangChainFireworksMistral7BInstructFunction.Arn}/invocations
-      RequestParameters: *AsyncLambdaIntegrationRequestParameters
-      RequestTemplates: *AsyncLambdaIntegrationRequestTemplates
-  LangChainFireworksMistral7BInstructFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: langchain/fireworks/
-      Layers:
-        - !Ref LangChainCommonLayer
-        - !Ref CommonLayer
-      Environment:
-        Variables:
-          API_Base: "https://api.fireworks.ai/inference/v1/chat/completions"
-          API_Key: "WglavV6hm0RLeZohaDZcrEjGAedu04GnJbDazBJ2PzmY7nRl"
-          Model_Name: "accounts/fireworks/models/mistral-7b-instruct-4k"
-          SessionTableName: !Ref SessionTable
-          CDTableName: !Ref CharacterDefinition
-          CMTableName: !Ref CharacterMessages
-          UMTableName: !Ref UserMessages
-          ChatSettingTableName: !Ref ChatSetting
-      Policies:
-        - DynamoDBCrudPolicy:
-            TableName: !Ref SessionTable
-        - Statement:
-            - Effect: Allow
-              Action:
-                - "execute-api:ManageConnections"
-              Resource:
-                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
-        - DynamoDBCrudPolicy:
-            TableName: !Ref CharacterDefinition
-        - Statement:
-            - Effect: Allow
-              Action:
-                - "execute-api:ManageConnections"
-              Resource:
-                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
-        - DynamoDBCrudPolicy:
-            TableName: !Ref CharacterMessages
-        - Statement:
-            - Effect: Allow
-              Action:
-                - "execute-api:ManageConnections"
-              Resource:
-                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
-        - DynamoDBCrudPolicy:
-            TableName: !Ref UserMessages
-        - Statement:
-            - Effect: Allow
-              Action:
-                - "execute-api:ManageConnections"
-              Resource:
-                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
-        - DynamoDBCrudPolicy:
-            TableName: !Ref ChatSetting
-        - Statement:
-            - Effect: Allow
-              Action:
-                - "execute-api:ManageConnections"
-              Resource:
-                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
-            - Effect: Allow
-              Action:
-                - "bedrock:InvokeModel"
-                - "bedrock:InvokeModelWithResponseStream"
-              Resource:
-                - "arn:aws:bedrock:*::foundation-model/*"
-  LangChainFireworksMistral7BInstructPermission:
-    Type: AWS::Lambda::Permission
-    DependsOn:
-      - WebSocketAPI
-      - SessionTable
-      - CharacterDefinition
-      - CharacterMessages
-      - UserMessages
-      - ChatSetting
-    Properties:
-      Action: lambda:InvokeFunction
-      FunctionName: !Ref LangChainFireworksMistral7BInstructFunction
-      Principal: apigateway.amazonaws.com
-
-
 
       # ModifyCharacterDefinitionRoute
   ModifyCharacterDefinitionFunction:
     Type: AWS::Serverless::Function
+    DeletionPolicy: Retain
     Properties:
       CodeUri: game/modify-character-definition/
       Layers:
@@ -2715,6 +992,7 @@ Resources:
                 - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
   ModifyCharacterDefinitionPermission:
     Type: AWS::Lambda::Permission
+    DeletionPolicy: Retain
     DependsOn:
       - WebSocketAPI
       - CharacterDefinition
@@ -2726,6 +1004,7 @@ Resources:
   # SyncCharacterMessages
   SyncCharacterMessagesFunction:
     Type: AWS::Serverless::Function
+    DeletionPolicy: Retain
     Properties:
       CodeUri: game/sync-character-messages/
       Layers:
@@ -2745,6 +1024,7 @@ Resources:
                 - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
   SyncCharacterMessagesPermission:
     Type: AWS::Lambda::Permission
+    DeletionPolicy: Retain
     DependsOn:
       - WebSocketAPI
       - CharacterDefinition
@@ -2757,6 +1037,7 @@ Resources:
   # GetUserMessages
   GetUserMessagesFunction:
     Type: AWS::Serverless::Function
+    DeletionPolicy: Retain
     Properties:
       CodeUri: game/get-user-messages/
       Layers:
@@ -2776,6 +1057,7 @@ Resources:
                 - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
   GetUserMessagesPermission:
     Type: AWS::Lambda::Permission
+    DeletionPolicy: Retain
     DependsOn:
       - WebSocketAPI
       - UserMessages
@@ -2787,6 +1069,7 @@ Resources:
   # ModifyUserMessages
   ModifyUserMessagesFunction:
     Type: AWS::Serverless::Function
+    DeletionPolicy: Retain
     Properties:
       CodeUri: game/modify-user-messages/
       Layers:
@@ -2806,6 +1089,7 @@ Resources:
                 - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
   ModifyUserMessagesPermission:
     Type: AWS::Lambda::Permission
+    DeletionPolicy: Retain
     DependsOn:
       - WebSocketAPI
       - UserMessages
@@ -2817,6 +1101,7 @@ Resources:
   # DeleteLogMessagesFromHistory
   DeleteLogMessagesFromHistoryFunction:
     Type: AWS::Serverless::Function
+    DeletionPolicy: Retain
     Properties:
       CodeUri: game/delete-log-message-from-history/
       Layers:
@@ -2836,6 +1121,7 @@ Resources:
                 - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
   DeleteLogMessagesFromHistoryPermission:
     Type: AWS::Lambda::Permission
+    DeletionPolicy: Retain
     DependsOn:
       - WebSocketAPI
       - SessionTable
@@ -2848,6 +1134,7 @@ Resources:
   # CreateChatFromSaved
   CreateChatFromSavedFunction:
     Type: AWS::Serverless::Function
+    DeletionPolicy: Retain
     Properties:
       CodeUri: game/create-chat-from-saved/
       Layers:
@@ -2867,6 +1154,7 @@ Resources:
                 - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
   CreateChatFromSavedPermission:
     Type: AWS::Lambda::Permission
+    DeletionPolicy: Retain
     DependsOn:
       - WebSocketAPI
       - SessionTable
@@ -2875,7 +1163,37 @@ Resources:
       FunctionName: !Ref CreateChatFromSavedFunction
       Principal: apigateway.amazonaws.com
 
-
+   # ModifyChatSetting
+  ModifyChatSettingFunction:
+    Type: AWS::Serverless::Function
+    DeletionPolicy: Retain
+    Properties:
+      CodeUri: game/modify-chat-setting/
+      Layers:
+        - !Ref LangChainCommonLayer
+        - !Ref CommonLayer
+      Environment:
+        Variables:
+          TableName: !Ref ChatSetting
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ChatSetting
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "execute-api:ManageConnections"
+              Resource:
+                - !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketAPI}/*"
+  ModifyChatSettingPermission:
+    Type: AWS::Lambda::Permission
+    DeletionPolicy: Retain
+    DependsOn:
+      - WebSocketAPI
+      - SessionTable
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref ModifyChatSettingFunction
+      Principal: apigateway.amazonaws.com
 
   # bedrock
   BedrockRoute:
@@ -3031,6 +1349,17 @@ Resources:
       Action: lambda:InvokeFunction
       FunctionName: !Ref OnDefaultFunction
       Principal: apigateway.amazonaws.com
+
+
+  # nltk layer
+  NltkLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      ContentUri: layer/nltk/
+      CompatibleRuntimes:
+        - python3.12
+    Metadata:
+      BuildMethod: python3.12
 
   # lambda layer
   LangChainCommonLayer:

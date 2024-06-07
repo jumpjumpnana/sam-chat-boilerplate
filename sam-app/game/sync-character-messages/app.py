@@ -26,7 +26,7 @@ from CharacterMessagesDao import (
 cm_table_name = os.environ["CMTableName"]
 
 def handler(event, context):
-   
+    # 查询今天的所有数据同步到mysql
     boto3_session = boto3.session.Session()
     character_messages = get_updated_character_messages(boto3_session, cm_table_name)
     if character_messages:
