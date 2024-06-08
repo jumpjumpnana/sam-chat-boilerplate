@@ -64,7 +64,8 @@ from ChatSettingDao import (
 from tokenizer import (
     get_complete_sentences,
     word_tokenize,
-    trim_history
+    trim_history,
+    tokenize_with_spaces
 )
 
 
@@ -244,7 +245,7 @@ def chat(
     history.add_ai_message(complete_reply)
 
     # 截取response,重新分词，手动调用callback
-    tokens = word_tokenize(complete_reply)
+    tokens = tokenize_with_spaces(complete_reply)
     # 将 tokens 发送给客户端
     for token in tokens:
         callback.on_llm_new_token(token)

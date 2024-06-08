@@ -64,17 +64,22 @@ def get_complete_sentences(text):
     
     return complete_text.strip()
 
-# 分词
+# 分词，会去掉空格
 def word_tokenize(text):
     return nltk.tokenize.word_tokenize(text)
 
-# 分词
+# 分词获取长度
 def get_num_tokens(messages):
     message_str = " ".join([msg.content for msg in messages])
     tokens = word_tokenize(message_str)
     num_tokens = len(tokens)
     # print(f"num_tokens:{num_tokens}")
     return num_tokens
+# 分词，不去掉空格   
+def tokenize_with_spaces(text):
+    # 使用正则表达式进行分词，保留空格
+    tokens = re.findall(r'\S+|\s+', text)
+    return tokens
 
 # 截取history
 def trim_history(history_message,sysMessagesStr,returnStr, max_token_limit):
