@@ -136,7 +136,7 @@ def chat(
     
 
     # # 判断消息数是否足够扣除
-    # can_deduct = has_sufficient_messages(boto3_session, um_table_name,uid ,1)
+    # can_deduct = has_sufficient_messages(boto3_session, um_table_name,uid ,2)
     # if not can_deduct:
     #     try:
     #         raise ValueError("Insufficient messages. Please recharge to continue.")
@@ -146,8 +146,8 @@ def chat(
     #         callback.on_llm_error(error=e, message=custom_message, error_code=error_code)
     #     return
 
-
-    # llm.callbacks = [callback]
+    # 发消息，扣除点数
+    deduct_user_messages(boto3_session, um_table_name,uid ,1)
 
     # 设置setting属性值
     chat_setting = get_chat_setting(boto3_session, cs_table_name, uid)
@@ -267,7 +267,7 @@ def chat(
 
     
 
-    # 扣除点数
+    # AI回复，扣除点数
     deduct_user_messages(boto3_session, um_table_name,uid ,1)
     # 对话量计数
     update_character_messages(boto3_session, cm_table_name, characterId)
